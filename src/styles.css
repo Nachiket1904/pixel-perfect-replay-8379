@@ -98,7 +98,7 @@
   --success: oklch(0.58 0.15 153);
   --warning: oklch(0.77 0.16 75);
   --font-display: "Inter", sans-serif;
-  --font-mono: "JetBrains Mono", monospace;
+  --font-code: "JetBrains Mono", monospace;
 }
 
 .dark {
@@ -140,7 +140,7 @@
 
 @theme inline {
   --font-sans: var(--font-display);
-  --font-mono: var(--font-mono);
+  --font-mono: var(--font-code);
   --color-success: var(--success);
   --color-warning: var(--warning);
 }
