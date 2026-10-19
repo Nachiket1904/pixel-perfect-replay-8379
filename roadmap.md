@@ -1,0 +1,4 @@
+- [ ] Build shared navigation/footer and a simple home screen.
+- [ ] Add the requested types, mock records, and async mock API.
+- [ ] Add all requested placeholder routes with route-specific metadata and not-found handling.
+- [ ] Verify routes, mobile layout, API rules, and current build status.
