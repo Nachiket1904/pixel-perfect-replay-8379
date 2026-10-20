@@ -1,4 +1,3 @@
-- [ ] Build shared navigation/footer and a simple home screen.
-- [ ] Add the requested types, mock records, and async mock API.
-- [ ] Add all requested placeholder routes with route-specific metadata and not-found handling.
-- [ ] Verify routes, mobile layout, API rules, and current build status.
+- [ ] Fix TanStack link typing by restoring typed page routes and repair the homepage route-match test.
+- [ ] Complete the PadhLo shell and placeholders for every requested URL with route-specific metadata.
+- [ ] Verify data rules, routes, mobile rendering, tests, and production build.

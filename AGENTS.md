@@ -13,3 +13,4 @@
 - Use TanStack Start and TanStack Router for all pages because this repository is built on that stack; do not add React Router.
 - Keep all application data access in `src/lib/api.ts`, with mock records isolated in `src/lib/mock-data.ts`, because the data layer is designed to be replaced by the user's FastAPI service later.
 - Keep this frontend-only: do not add authentication, backend services, environment variables, or database integrations because the user provides their own FastAPI backend.
+- Use a shared presentation-only placeholder view for unbuilt routes; each route file owns its route-specific metadata and any URL parameters.
