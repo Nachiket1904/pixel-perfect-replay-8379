@@ -14,6 +14,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { Button } from "@/components/ui/button";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -129,6 +130,7 @@ function RootComponent() {
         </main>
         <SiteFooter />
       </div>
+      <Toaster position="bottom-center" />
     </QueryClientProvider>
   );
 }
@@ -146,16 +148,26 @@ function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex shrink-0 items-center gap-2.5 text-foreground" aria-label="PadhLo With Us home">
+        <Link
+          to="/"
+          className="flex shrink-0 items-center gap-2.5 text-foreground"
+          aria-label="PadhLo With Us home"
+        >
           <span className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
             <BookOpen className="size-5" aria-hidden="true" />
           </span>
-          <span className="text-base font-bold">PadhLo <span className="font-medium text-muted-foreground">With Us</span></span>
+          <span className="text-base font-bold">
+            PadhLo <span className="font-medium text-muted-foreground">With Us</span>
+          </span>
         </Link>
 
         <nav aria-label="Main navigation" className="hidden items-center gap-1 lg:flex">
           {navLinks.map((item) => (
-            <Link key={item.to} to={item.to} className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+            <Link
+              key={item.to}
+              to={item.to}
+              className="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
+            >
               {item.label}
             </Link>
           ))}
@@ -180,15 +192,29 @@ function SiteHeader() {
       </div>
 
       {menuOpen && (
-        <nav aria-label="Mobile navigation" className="border-t border-border bg-background px-4 py-3 lg:hidden">
+        <nav
+          aria-label="Mobile navigation"
+          className="border-t border-border bg-background px-4 py-3 lg:hidden"
+        >
           <div className="mx-auto flex max-w-7xl flex-col gap-1">
             {navLinks.map((item) => (
-              <Link key={item.to} to={item.to} onClick={() => setMenuOpen(false)} className="flex items-center justify-between rounded-md px-3 py-3 text-sm font-medium text-foreground hover:bg-secondary">
-                {item.label}<ChevronDown className="size-4 -rotate-90 text-muted-foreground" aria-hidden="true" />
+              <Link
+                key={item.to}
+                to={item.to}
+                onClick={() => setMenuOpen(false)}
+                className="flex items-center justify-between rounded-md px-3 py-3 text-sm font-medium text-foreground hover:bg-secondary"
+              >
+                {item.label}
+                <ChevronDown
+                  className="size-4 -rotate-90 text-muted-foreground"
+                  aria-hidden="true"
+                />
               </Link>
             ))}
             <Button variant="outline" className="mt-2 w-full sm:hidden" asChild>
-              <Link to="/login" onClick={() => setMenuOpen(false)}>Log in</Link>
+              <Link to="/login" onClick={() => setMenuOpen(false)}>
+                Log in
+              </Link>
             </Button>
           </div>
         </nav>
@@ -202,12 +228,22 @@ function SiteFooter() {
     <footer className="border-t border-border bg-background">
       <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
         <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-          <Link to="/" className="font-semibold text-foreground">PadhLo With Us</Link>
-          <Link to="/about" className="transition-colors hover:text-foreground">About</Link>
-          <Link to="/privacy" className="transition-colors hover:text-foreground">Privacy</Link>
-          <Link to="/terms" className="transition-colors hover:text-foreground">Terms</Link>
+          <Link to="/" className="font-semibold text-foreground">
+            PadhLo With Us
+          </Link>
+          <Link to="/about" className="transition-colors hover:text-foreground">
+            About
+          </Link>
+          <Link to="/privacy" className="transition-colors hover:text-foreground">
+            Privacy
+          </Link>
+          <Link to="/terms" className="transition-colors hover:text-foreground">
+            Terms
+          </Link>
         </div>
-        <p>Made in India <span aria-hidden="true">·</span> For curious builders</p>
+        <p>
+          Made in India <span aria-hidden="true">·</span> For curious builders
+        </p>
       </div>
     </footer>
   );

@@ -12,12 +12,17 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as BuildRouteImport } from './routes/build'
+import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as PapersRouteImport } from './routes/papers'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReposRouteImport } from './routes/repos'
-import { Route as RoadmapsRouteImport } from './routes/roadmaps'
+import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as PapersIndexRouteImport } from './routes/papers.index'
+import { Route as PapersIdRouteImport } from './routes/papers.$id'
+import { Route as RoadmapsIndexRouteImport } from './routes/roadmaps.index'
+import { Route as RoadmapsSlugIndexRouteImport } from './routes/roadmaps.$slug.index'
+import { Route as RoadmapsSlugNodeIdRouteImport } from './routes/roadmaps.$slug.$nodeId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,14 +39,14 @@ const BuildRoute = BuildRouteImport.update({
   path: '/build',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PapersRoute = PapersRouteImport.update({
-  id: '/papers',
-  path: '/papers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -54,9 +59,9 @@ const ReposRoute = ReposRouteImport.update({
   path: '/repos',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RoadmapsRoute = RoadmapsRouteImport.update({
-  id: '/roadmaps',
-  path: '/roadmaps',
+const SignupRoute = SignupRouteImport.update({
+  id: '/signup',
+  path: '/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -64,40 +69,80 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PapersIndexRoute = PapersIndexRouteImport.update({
+  id: '/papers/',
+  path: '/papers/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PapersIdRoute = PapersIdRouteImport.update({
+  id: '/papers/$id',
+  path: '/papers/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoadmapsIndexRoute = RoadmapsIndexRouteImport.update({
+  id: '/roadmaps/',
+  path: '/roadmaps/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoadmapsSlugIndexRoute = RoadmapsSlugIndexRouteImport.update({
+  id: '/roadmaps/$slug/',
+  path: '/roadmaps/$slug/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RoadmapsSlugNodeIdRoute = RoadmapsSlugNodeIdRouteImport.update({
+  id: '/roadmaps/$slug/$nodeId',
+  path: '/roadmaps/$slug/$nodeId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/build': typeof BuildRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/papers': typeof PapersRoute
   '/privacy': typeof PrivacyRoute
   '/repos': typeof ReposRoute
-  '/roadmaps': typeof RoadmapsRoute
+  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/papers/$id': typeof PapersIdRoute
+  '/papers/': typeof PapersIndexRoute
+  '/roadmaps/': typeof RoadmapsIndexRoute
+  '/roadmaps/$slug/$nodeId': typeof RoadmapsSlugNodeIdRoute
+  '/roadmaps/$slug/': typeof RoadmapsSlugIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/build': typeof BuildRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/papers': typeof PapersRoute
   '/privacy': typeof PrivacyRoute
   '/repos': typeof ReposRoute
-  '/roadmaps': typeof RoadmapsRoute
+  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/papers/$id': typeof PapersIdRoute
+  '/papers': typeof PapersIndexRoute
+  '/roadmaps': typeof RoadmapsIndexRoute
+  '/roadmaps/$slug/$nodeId': typeof RoadmapsSlugNodeIdRoute
+  '/roadmaps/$slug': typeof RoadmapsSlugIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/build': typeof BuildRoute
+  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
-  '/papers': typeof PapersRoute
   '/privacy': typeof PrivacyRoute
   '/repos': typeof ReposRoute
-  '/roadmaps': typeof RoadmapsRoute
+  '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/papers/$id': typeof PapersIdRoute
+  '/papers/': typeof PapersIndexRoute
+  '/roadmaps/': typeof RoadmapsIndexRoute
+  '/roadmaps/$slug/$nodeId': typeof RoadmapsSlugNodeIdRoute
+  '/roadmaps/$slug/': typeof RoadmapsSlugIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -105,46 +150,66 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/build'
+    | '/dashboard'
     | '/login'
-    | '/papers'
     | '/privacy'
     | '/repos'
-    | '/roadmaps'
+    | '/signup'
     | '/terms'
+    | '/papers/$id'
+    | '/papers/'
+    | '/roadmaps/'
+    | '/roadmaps/$slug/$nodeId'
+    | '/roadmaps/$slug/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
     | '/build'
+    | '/dashboard'
     | '/login'
-    | '/papers'
     | '/privacy'
     | '/repos'
-    | '/roadmaps'
+    | '/signup'
     | '/terms'
+    | '/papers/$id'
+    | '/papers'
+    | '/roadmaps'
+    | '/roadmaps/$slug/$nodeId'
+    | '/roadmaps/$slug'
   id:
     | '__root__'
     | '/'
     | '/about'
     | '/build'
+    | '/dashboard'
     | '/login'
-    | '/papers'
     | '/privacy'
     | '/repos'
-    | '/roadmaps'
+    | '/signup'
     | '/terms'
+    | '/papers/$id'
+    | '/papers/'
+    | '/roadmaps/'
+    | '/roadmaps/$slug/$nodeId'
+    | '/roadmaps/$slug/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AboutRoute: typeof AboutRoute
   BuildRoute: typeof BuildRoute
+  DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
-  PapersRoute: typeof PapersRoute
   PrivacyRoute: typeof PrivacyRoute
   ReposRoute: typeof ReposRoute
-  RoadmapsRoute: typeof RoadmapsRoute
+  SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
+  PapersIdRoute: typeof PapersIdRoute
+  PapersIndexRoute: typeof PapersIndexRoute
+  RoadmapsIndexRoute: typeof RoadmapsIndexRoute
+  RoadmapsSlugNodeIdRoute: typeof RoadmapsSlugNodeIdRoute
+  RoadmapsSlugIndexRoute: typeof RoadmapsSlugIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -170,18 +235,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof BuildRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/papers': {
-      id: '/papers'
-      path: '/papers'
-      fullPath: '/papers'
-      preLoaderRoute: typeof PapersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -198,11 +263,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReposRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/roadmaps': {
-      id: '/roadmaps'
-      path: '/roadmaps'
-      fullPath: '/roadmaps'
-      preLoaderRoute: typeof RoadmapsRouteImport
+    '/signup': {
+      id: '/signup'
+      path: '/signup'
+      fullPath: '/signup'
+      preLoaderRoute: typeof SignupRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -212,6 +277,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/papers/': {
+      id: '/papers/'
+      path: '/papers'
+      fullPath: '/papers/'
+      preLoaderRoute: typeof PapersIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/papers/$id': {
+      id: '/papers/$id'
+      path: '/papers/$id'
+      fullPath: '/papers/$id'
+      preLoaderRoute: typeof PapersIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roadmaps/': {
+      id: '/roadmaps/'
+      path: '/roadmaps'
+      fullPath: '/roadmaps/'
+      preLoaderRoute: typeof RoadmapsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roadmaps/$slug/': {
+      id: '/roadmaps/$slug/'
+      path: '/roadmaps/$slug'
+      fullPath: '/roadmaps/$slug/'
+      preLoaderRoute: typeof RoadmapsSlugIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/roadmaps/$slug/$nodeId': {
+      id: '/roadmaps/$slug/$nodeId'
+      path: '/roadmaps/$slug/$nodeId'
+      fullPath: '/roadmaps/$slug/$nodeId'
+      preLoaderRoute: typeof RoadmapsSlugNodeIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -219,12 +319,17 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AboutRoute: AboutRoute,
   BuildRoute: BuildRoute,
+  DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
-  PapersRoute: PapersRoute,
   PrivacyRoute: PrivacyRoute,
   ReposRoute: ReposRoute,
-  RoadmapsRoute: RoadmapsRoute,
+  SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
+  PapersIdRoute: PapersIdRoute,
+  PapersIndexRoute: PapersIndexRoute,
+  RoadmapsIndexRoute: RoadmapsIndexRoute,
+  RoadmapsSlugNodeIdRoute: RoadmapsSlugNodeIdRoute,
+  RoadmapsSlugIndexRoute: RoadmapsSlugIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

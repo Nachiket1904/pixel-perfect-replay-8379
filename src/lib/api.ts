@@ -14,7 +14,7 @@ const GENERATION_DELAY_MS = 2_500;
 const QUOTA_LIMIT = 3;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-let roadmaps = structuredClone(mockRoadmaps);
+const roadmaps = structuredClone(mockRoadmaps);
 let remainingGenerations = QUOTA_LIMIT;
 let quotaResetsAt = Date.now() + DAY_MS;
 
@@ -88,7 +88,11 @@ export async function updateNodeStatus(
 export async function getGenerationQuota(): Promise<GenerationQuota> {
   await delay();
   refreshQuotaIfExpired();
-  return { remaining: remainingGenerations, limit: QUOTA_LIMIT, resets_at: new Date(quotaResetsAt).toISOString() };
+  return {
+    remaining: remainingGenerations,
+    limit: QUOTA_LIMIT,
+    resets_at: new Date(quotaResetsAt).toISOString(),
+  };
 }
 
 function goalTitle(goal: string): string {
@@ -115,7 +119,10 @@ export async function generateRoadmap(req: GenerateRoadmapRequest): Promise<Road
     throw new ApiError("VALIDATION_ERROR", "Tell us a little more about what you want to learn.");
   }
   if (/\b(cook|cricket|dance)\b/i.test(goal)) {
-    throw new ApiError("NON_TECH_GOAL", "For now, roadmap generation is for technology learning goals.");
+    throw new ApiError(
+      "NON_TECH_GOAL",
+      "For now, roadmap generation is for technology learning goals.",
+    );
   }
   if (remainingGenerations <= 0) {
     throw new ApiError("RATE_LIMITED", "You’ve used all your roadmap generations for now.");
@@ -125,7 +132,8 @@ export async function generateRoadmap(req: GenerateRoadmapRequest): Promise<Road
   remainingGenerations -= 1;
 
   const template = roadmaps.find((roadmap) => roadmap.slug === "llm-engineer-a1b2");
-  if (!template) throw new ApiError("SERVER_ERROR", "The roadmap template is temporarily unavailable.");
+  if (!template)
+    throw new ApiError("SERVER_ERROR", "The roadmap template is temporarily unavailable.");
 
   const id = `roadmap-ai-${Date.now().toString(36)}`;
   const baseSlug = slugify(goalTitle(goal)) || "learning-roadmap";
@@ -139,11 +147,18 @@ export async function generateRoadmap(req: GenerateRoadmapRequest): Promise<Road
     description: `A learning path shaped around: ${goal}`,
     source: "ai",
     level,
-    estimated_hours: Math.max(8, Math.round((template.estimated_hours * 3) / Math.max(1, req.hours_per_week))),
+    estimated_hours: Math.max(
+      8,
+      Math.round((template.estimated_hours * 3) / Math.max(1, req.hours_per_week)),
+    ),
     progress: null,
     goal_prompt: goal,
     created_at: new Date().toISOString(),
-    nodes: template.nodes.map((item, index) => ({ ...item, id: `${id}-node-${index + 1}`, status: "not_started" })),
+    nodes: template.nodes.map((item, index) => ({
+      ...item,
+      id: `${id}-node-${index + 1}`,
+      status: "not_started",
+    })),
     edges: template.edges.map((item, index) => ({
       ...item,
       id: `${id}-edge-${index + 1}`,

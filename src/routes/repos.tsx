@@ -6,9 +6,15 @@ export const Route = createFileRoute("/repos")({
   head: () => ({
     meta: [
       { title: "Repo Visualizer | PadhLo With Us" },
-      { name: "description", content: "Explore how files and modules in a code repository fit together." },
+      {
+        name: "description",
+        content: "Explore how files and modules in a code repository fit together.",
+      },
       { property: "og:title", content: "Repo Visualizer | PadhLo With Us" },
-      { property: "og:description", content: "Explore how files and modules in a code repository fit together." },
+      {
+        property: "og:description",
+        content: "Explore how files and modules in a code repository fit together.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -17,5 +23,10 @@ export const Route = createFileRoute("/repos")({
 });
 
 function ReposPage() {
-  return <ShellPage title="Repo Visualizer" description="See how a code repository is organized and how its pieces connect." />;
+  return (
+    <ShellPage
+      title="Repo Visualizer"
+      description="See how a code repository is organized and how its pieces connect."
+    />
+  );
 }

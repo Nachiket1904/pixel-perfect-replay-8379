@@ -57,11 +57,7 @@ export interface GenerationQuota {
 }
 
 export type ApiErrorCode =
-  | "NOT_FOUND"
-  | "VALIDATION_ERROR"
-  | "NON_TECH_GOAL"
-  | "RATE_LIMITED"
-  | "SERVER_ERROR";
+  "NOT_FOUND" | "VALIDATION_ERROR" | "NON_TECH_GOAL" | "RATE_LIMITED" | "SERVER_ERROR";
 
 export class ApiError extends Error {
   constructor(
