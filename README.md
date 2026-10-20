@@ -14,11 +14,23 @@ Continue developing this project in the [Lovable editor](https://lovable.dev/pro
 
 ## Development
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+Prefer working locally? Install [Bun](https://bun.sh/), then run:
 
 ```sh
 git clone <this-repository-url>
 cd <repository-name>
-npm i
-npm run dev
+bun install
+bun run dev
 ```
+
+## Deploy on Render
+
+Deploy this app as a **Web Service** (not a Static Site):
+
+1. In Render, choose **New > Web Service** and connect this repository.
+2. Set the runtime to **Node** and use the repository root as the root directory.
+3. Set the build command to `bun install --frozen-lockfile && bun run build`.
+4. Set the start command to `node .output/server/index.mjs`.
+5. Create the service. No publish directory or environment variables are needed for the current mock-data app.
+
+The production build uses Nitro's Node server preset so it can run on Render.
