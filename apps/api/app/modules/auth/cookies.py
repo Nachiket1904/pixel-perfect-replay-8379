@@ -11,7 +11,10 @@ REFRESH_PATH = "/api/v1/auth"
 def set_auth_cookies(response: Response, access: str, refresh: str) -> None:
     s = get_settings()
     common = {"httponly": True, "secure": s.cookie_secure, "samesite": "lax", "domain": s.cookie_domain}
-    response.set_cookie(ACCESS_COOKIE, access, max_age=s.access_token_ttl_minutes * 60, path="/", **common)
+    # The JWT inside expires after access_token_ttl_minutes. The cookie lives as long as the refresh
+    # token so an expired token is still sent: the API answers 401 and the client refreshes, instead
+    # of public pages silently treating a logged-in learner as anonymous.
+    response.set_cookie(ACCESS_COOKIE, access, max_age=s.refresh_token_ttl_days * 86400, path="/", **common)
     response.set_cookie(
         REFRESH_COOKIE, refresh, max_age=s.refresh_token_ttl_days * 86400, path=REFRESH_PATH, **common
     )

@@ -58,3 +58,15 @@ describe("http client", () => {
     await expect(getMe()).resolves.toBeNull();
   });
 });
+
+describe("roadmaps (Day 9)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("loads roadmaps from the API", async () => {
+    const fetchMock = vi.fn(async () => json(200, [{ slug: "python-for-ml" }]));
+    vi.stubGlobal("fetch", fetchMock);
+    const { listRoadmaps } = await import("@/lib/api");
+    await expect(listRoadmaps("official")).resolves.toEqual([{ slug: "python-for-ml" }]);
+    expect(fetchMock).toHaveBeenCalledWith("/api/v1/roadmaps?filter=official", expect.anything());
+  });
+});

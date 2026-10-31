@@ -36,6 +36,23 @@ async def get_current_user(
 CurrentUser = Annotated[User, Depends(get_current_user)]
 
 
+async def get_optional_user(
+    session: SessionDep,
+    access_token: Annotated[str | None, Cookie(alias=ACCESS_COOKIE)] = None,
+) -> User | None:
+    """For public endpoints that personalise when logged in (e.g. roadmap progress).
+
+    No cookie -> anonymous. A cookie that is expired or invalid -> 401, so the web client
+    refreshes the session and retries instead of silently showing the logged-out view.
+    """
+    if not access_token:
+        return None
+    return await get_current_user(session, access_token)
+
+
+OptionalUser = Annotated[User | None, Depends(get_optional_user)]
+
+
 def require_role(*roles: Role):  # noqa: ANN201
     """Usage: dependencies=[Depends(require_role(Role.admin))]. RBAC is enforced here, never in the UI."""
 
