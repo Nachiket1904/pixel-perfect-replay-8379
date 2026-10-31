@@ -1,10 +1,11 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
+import { useState } from "react";
 import {
   ArrowLeft,
   BookOpen,
+  Code2,
   ExternalLink,
   FileText,
-  Play,
   Search,
   Sparkles,
   Video,
@@ -20,7 +21,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CodeBlock } from "@/components/common/code-block";
+import { CodeEditor } from "@/components/editor/code-editor";
+import { useDraft } from "@/components/editor/use-draft";
 import { Markdown } from "@/components/common/markdown";
 import { ErrorState } from "@/components/common/states";
 import { PaperCard } from "@/components/papers/paper-card";
@@ -126,19 +128,7 @@ function TopicView({ node }: { node: NodeDetail }) {
             <Markdown>{node.content_md}</Markdown>
           </section>
 
-          {node.exercise && (
-            <section aria-labelledby="exercise-heading" className="space-y-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 id="exercise-heading" className="text-xl font-semibold text-foreground">
-                  Practice: {node.exercise.title}
-                </h2>
-                <Button disabled className="bg-warning text-foreground hover:bg-warning/90">
-                  <Play className="mr-2 size-4" aria-hidden="true" /> Run in browser (coming soon)
-                </Button>
-              </div>
-              <CodeBlock code={node.exercise.starter_code} label={node.exercise.language} />
-            </section>
-          )}
+          {node.node_type !== "milestone" && <PracticeSection node={node} />}
 
           <div className="flex flex-wrap justify-between gap-3 border-t border-border pt-6">
             <Button variant="outline" asChild>
@@ -262,5 +252,45 @@ function TopicSkeleton() {
         <Skeleton className="h-60" />
       </div>
     </div>
+  );
+}
+
+function PracticeSection({ node }: { node: NodeDetail }) {
+  const exercise = node.exercise;
+  // Exercises load the editor straight away; the plain scratchpad waits for a click, so
+  // learners who only read don't download the editor (about 2 MB) on every topic.
+  const [open, setOpen] = useState(exercise !== null);
+  const starter =
+    exercise?.starter_code ??
+    `# Scratchpad for "${node.title}"\n# Try the examples from this topic here.\n`;
+  const [code, setCode] = useDraft(`${node.roadmap_slug}/${node.id}`, starter);
+
+  return (
+    <section aria-labelledby="practice-heading" className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 id="practice-heading" className="text-xl font-semibold text-foreground">
+          {exercise ? `Practice: ${exercise.title}` : "Code scratchpad"}
+        </h2>
+        {!open && (
+          <Button variant="outline" onClick={() => setOpen(true)}>
+            <Code2 className="mr-2 size-4" aria-hidden="true" /> Open scratchpad
+          </Button>
+        )}
+      </div>
+      {open && (
+        <>
+          <CodeEditor
+            label={exercise ? `Code for ${exercise.title}` : `Scratchpad for ${node.title}`}
+            language={exercise?.language ?? "python"}
+            value={code}
+            onChange={setCode}
+            initialValue={starter}
+          />
+          <p className="text-xs text-muted-foreground">
+            Your code is saved in this browser. Running it here is coming soon.
+          </p>
+        </>
+      )}
+    </section>
   );
 }
