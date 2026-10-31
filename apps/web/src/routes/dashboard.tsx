@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { ArrowRight, Map, Sparkles } from "lucide-react";
 
+import { RequireAuth } from "@/components/auth/require-auth";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,8 +13,16 @@ import type { ActiveRoadmap } from "@/lib/types";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => pageMeta("Dashboard", "Continue your roadmaps and pick your next topic."),
-  component: DashboardPage,
+  component: ProtectedDashboard,
 });
+
+function ProtectedDashboard() {
+  return (
+    <RequireAuth>
+      <DashboardPage />
+    </RequireAuth>
+  );
+}
 
 function DashboardPage() {
   const dashboard = useDashboard();

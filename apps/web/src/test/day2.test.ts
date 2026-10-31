@@ -2,7 +2,7 @@ import { QueryClient } from "@tanstack/react-query";
 import { createRouter } from "@tanstack/react-router";
 import { describe, expect, it } from "vitest";
 
-import { generateRoadmap, getRoadmap } from "@/lib/api";
+import { generateRoadmap, getRoadmap } from "@/lib/mock-api";
 import { topologicalLevels } from "@/lib/graph";
 import { ApiError } from "@/lib/types";
 import { routeTree } from "@/routeTree.gen";

@@ -7,15 +7,21 @@ import {
   getDashboard,
   getGenerationQuota,
   getImplementation,
+  getMe,
   getNode,
   getPaper,
   getRoadmap,
   listRoadmaps,
+  login,
+  logout,
+  register,
   searchPapers,
   updateNodeStatus,
 } from "@/lib/api";
 import type {
   GenerateRoadmapRequest,
+  LoginRequest,
+  RegisterRequest,
   NodeDetail,
   NodeStatus,
   PaperSearchParams,
@@ -25,6 +31,7 @@ import type {
 export type RoadmapFilter = "all" | "official" | "mine";
 
 export const queryKeys = {
+  me: ["me"] as const,
   roadmaps: (filter: RoadmapFilter) => ["roadmaps", filter] as const,
   roadmap: (slug: string) => ["roadmap", slug] as const,
   quota: ["generation-quota"] as const,
@@ -140,5 +147,48 @@ export function useImplementation(id: string) {
     queryKey: queryKeys.implementation(id),
     queryFn: () => getImplementation(id),
     retry: false,
+  });
+}
+
+// ---------- Auth ----------
+
+export function useMe() {
+  return useQuery({
+    queryKey: queryKeys.me,
+    queryFn: getMe,
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+}
+
+/** After login/signup, store the user and refetch everything else (it may now be personalised). */
+function useAuthMutation<T>(fn: (body: T) => ReturnType<typeof login>) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: fn,
+    onSuccess: (user) => {
+      queryClient.setQueryData(queryKeys.me, user);
+      void queryClient.invalidateQueries({ predicate: (q) => q.queryKey[0] !== "me" });
+    },
+  });
+}
+
+export function useLogin() {
+  return useAuthMutation((body: LoginRequest) => login(body));
+}
+
+export function useSignup() {
+  return useAuthMutation((body: RegisterRequest) => register(body));
+}
+
+export function useLogout() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: logout,
+    // Even if the call fails, forget everything we cached for this user on this device.
+    onSettled: () => {
+      queryClient.clear();
+      queryClient.setQueryData(queryKeys.me, null);
+    },
   });
 }

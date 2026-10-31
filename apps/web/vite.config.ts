@@ -6,11 +6,30 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
+// Dev only: the browser talks to :8080 and Vite forwards /api to FastAPI, so auth cookies are
+// first-party (same idea as src/lib/api-proxy.ts in production).
+const apiOrigin = process.env["API_ORIGIN"] ?? "http://localhost:8000";
+
 export default defineConfig({
   nitro: { preset: "node-server" },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+  },
+  vite: {
+    server: {
+      proxy: {
+        "/api": {
+          target: apiOrigin,
+          configure: (proxy) => {
+            proxy.on("proxyReq", (proxyReq, req) => {
+              // Lets the API's CSRF Origin check see the host the browser actually used.
+              if (req.headers.host) proxyReq.setHeader("x-forwarded-host", req.headers.host);
+            });
+          },
+        },
+      },
+    },
   },
 });

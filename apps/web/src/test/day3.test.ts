@@ -8,7 +8,7 @@ import {
   getNode,
   searchPapers,
   updateNodeStatus,
-} from "@/lib/api";
+} from "@/lib/mock-api";
 import { routeTree } from "@/routeTree.gen";
 
 describe("day 3 routes", () => {

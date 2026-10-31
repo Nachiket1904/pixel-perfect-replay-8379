@@ -13,6 +13,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { AuthMenu } from "@/components/auth/auth-menu";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -174,9 +175,7 @@ function SiteHeader() {
         </nav>
 
         <div className="hidden shrink-0 sm:flex">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/login">Log in</Link>
-          </Button>
+          <AuthMenu variant="desktop" />
         </div>
 
         <Button
@@ -211,11 +210,9 @@ function SiteHeader() {
                 />
               </Link>
             ))}
-            <Button variant="outline" className="mt-2 w-full sm:hidden" asChild>
-              <Link to="/login" onClick={() => setMenuOpen(false)}>
-                Log in
-              </Link>
-            </Button>
+            <div className="sm:hidden">
+              <AuthMenu variant="mobile" onNavigate={() => setMenuOpen(false)} />
+            </div>
           </div>
         </nav>
       )}

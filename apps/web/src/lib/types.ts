@@ -57,7 +57,23 @@ export interface GenerationQuota {
 }
 
 export type ApiErrorCode =
-  "NOT_FOUND" | "VALIDATION_ERROR" | "NON_TECH_GOAL" | "RATE_LIMITED" | "SERVER_ERROR";
+  | "NOT_FOUND"
+  | "VALIDATION_ERROR"
+  | "NON_TECH_GOAL"
+  | "RATE_LIMITED"
+  | "SERVER_ERROR"
+  | "NOT_AUTHENTICATED"
+  | "FORBIDDEN"
+  | "EMAIL_TAKEN"
+  | "CONFLICT"
+  | "BAD_REQUEST"
+  | "NETWORK_ERROR";
+
+/** One entry of `details` on a VALIDATION_ERROR response. */
+export interface FieldError {
+  field: string;
+  message: string;
+}
 
 export class ApiError extends Error {
   constructor(
@@ -176,4 +192,29 @@ export interface Implementation extends ImplementationSummary {
 export interface PaperSearchParams {
   q?: string;
   category?: string;
+}
+
+// ---------- Auth ----------
+
+export type Role = "learner" | "instructor" | "admin";
+
+/** Mirrors UserOut in apps/api/app/modules/users/schemas.py. */
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar_url: string | null;
+  role: Role;
+  xp: number;
+  streak_days: number;
+  created_at: string;
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest extends LoginRequest {
+  name: string;
 }

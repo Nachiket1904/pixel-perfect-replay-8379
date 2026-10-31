@@ -1,21 +1,21 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ShellPage } from "@/components/shell-page";
+import { AuthForm } from "@/components/auth/auth-form";
+import { pageMeta } from "@/lib/seo";
+
+interface AuthSearch {
+  redirect?: string;
+}
 
 export const Route = createFileRoute("/login")({
-  head: () => ({
-    meta: [
-      { title: "Log in | PadhLo With Us" },
-      { name: "description", content: "Log in to PadhLo With Us." },
-      { property: "og:title", content: "Log in | PadhLo With Us" },
-      { property: "og:description", content: "Log in to PadhLo With Us." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
-    ],
-  }),
+  // Keep only a string redirect; safeRedirect() validates it before we navigate.
+  validateSearch: (search: Record<string, unknown>): AuthSearch =>
+    typeof search["redirect"] === "string" ? { redirect: search["redirect"] } : {},
+  head: () => pageMeta("Log in", "Log in to continue your PadhLo roadmaps."),
   component: LoginPage,
 });
 
 function LoginPage() {
-  return <ShellPage title="Log in" description="Your learning space is ready when you are." />;
+  const { redirect } = Route.useSearch();
+  return <AuthForm mode="login" redirect={redirect} />;
 }

@@ -1,13 +1,22 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ShellPage } from "@/components/shell-page";
+import { AuthForm } from "@/components/auth/auth-form";
 import { pageMeta } from "@/lib/seo";
 
+interface AuthSearch {
+  redirect?: string;
+}
+
 export const Route = createFileRoute("/signup")({
-  head: () => pageMeta("Sign up", "Create your free account. Coming on Day 7."),
-  component: Page,
+  // Keep only a string redirect; safeRedirect() validates it before we navigate.
+  validateSearch: (search: Record<string, unknown>): AuthSearch =>
+    typeof search["redirect"] === "string" ? { redirect: search["redirect"] } : {},
+  head: () =>
+    pageMeta("Sign up", "Create a free PadhLo account to save your roadmaps and progress."),
+  component: SignupPage,
 });
 
-function Page() {
-  return <ShellPage title="Sign up" description="Create your free account. Coming on Day 7." />;
+function SignupPage() {
+  const { redirect } = Route.useSearch();
+  return <AuthForm mode="signup" redirect={redirect} />;
 }
