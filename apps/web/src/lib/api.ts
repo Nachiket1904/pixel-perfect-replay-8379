@@ -6,6 +6,7 @@ import * as mock from "@/lib/mock-api";
 import {
   ApiError,
   type LoginRequest,
+  type NodeDetail,
   type RegisterRequest,
   type Roadmap,
   type RoadmapSummary,
@@ -53,6 +54,20 @@ export async function getRoadmap(slug: string): Promise<Roadmap> {
     // TODO(Day 19): remove. "Build my roadmap" is still mocked, so its roadmaps only exist
     // in the mock store. The mock throws NOT_FOUND itself for anything else.
     if (error instanceof ApiError && error.code === "NOT_FOUND") return mock.getRoadmap(slug);
+    throw error;
+  }
+}
+
+// ---------- Topic page (Day 10) ----------
+
+export async function getNode(slug: string, nodeId: string): Promise<NodeDetail> {
+  try {
+    return await request<NodeDetail>(
+      `/roadmaps/${encodeURIComponent(slug)}/nodes/${encodeURIComponent(nodeId)}`,
+    );
+  } catch (error) {
+    // TODO(Day 19): remove with the getRoadmap fallback above (mock "Build my roadmap").
+    if (error instanceof ApiError && error.code === "NOT_FOUND") return mock.getNode(slug, nodeId);
     throw error;
   }
 }

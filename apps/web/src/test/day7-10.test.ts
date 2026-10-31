@@ -70,3 +70,18 @@ describe("roadmaps (Day 9)", () => {
     expect(fetchMock).toHaveBeenCalledWith("/api/v1/roadmaps?filter=official", expect.anything());
   });
 });
+
+describe("topic page (Day 10)", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("calls the node endpoint with encoded ids", async () => {
+    const fetchMock = vi.fn(async () => json(200, { id: "py-numpy" }));
+    vi.stubGlobal("fetch", fetchMock);
+    const { getNode } = await import("@/lib/api");
+    await expect(getNode("python-for-ml", "py-numpy")).resolves.toEqual({ id: "py-numpy" });
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/v1/roadmaps/python-for-ml/nodes/py-numpy",
+      expect.anything(),
+    );
+  });
+});

@@ -1,4 +1,5 @@
 from typing import Literal
+from urllib.parse import quote_plus
 
 from fastapi import status
 from sqlalchemy import Select, func, or_, select
@@ -9,8 +10,11 @@ from app.core.errors import AppError
 from app.modules.roadmaps.models import Roadmap, RoadmapNode, RoadmapSource, Visibility
 from app.modules.roadmaps.schemas import (
     EdgeOut,
+    NodeDetailOut,
     NodeOut,
+    NodeRef,
     Position,
+    ResourceOut,
     RoadmapOut,
     RoadmapSummaryOut,
 )
@@ -103,4 +107,49 @@ def _node_out(node: RoadmapNode) -> NodeOut:
         summary=node.summary,
         node_type=node.node_type,
         position=Position(x=node.position_x, y=node.position_y),
+    )
+
+
+# ---------- Topic page (Day 10) ----------
+
+
+def _fallback_content(node: RoadmapNode) -> tuple[str, list[ResourceOut]]:
+    """Nodes without hand-written content still get a useful page instead of a blank one."""
+    content = node.content_md.strip() or (
+        f"## Overview\n{node.summary}\n\n## Suggested approach\n"
+        "Start with the official documentation, then watch one short video "
+        "and try a small example of your own."
+    )
+    resources = [ResourceOut.model_validate(r) for r in node.resources] or [
+        ResourceOut(
+            title=f"YouTube: {node.title}",
+            url=f"https://www.youtube.com/results?search_query={quote_plus(node.title)}",
+            kind="search",
+            is_free=True,
+        )
+    ]
+    return content, resources
+
+
+async def get_node(session: AsyncSession, user: User | None, slug: str, key: str) -> NodeDetailOut:
+    roadmap = await load_roadmap(session, user, slug)  # visibility check happens here
+    by_id = {n.id: n for n in roadmap.nodes}
+    node = next((n for n in roadmap.nodes if n.key == key), None)
+    if node is None:
+        raise AppError("NOT_FOUND", f"Topic “{key}” was not found.", status.HTTP_404_NOT_FOUND)
+
+    def ref(n: RoadmapNode) -> NodeRef:
+        return NodeRef(id=n.key, title=n.title)
+
+    content_md, resources = _fallback_content(node)
+    return NodeDetailOut(
+        **_node_out(node).model_dump(),
+        roadmap_id=roadmap.id,
+        roadmap_slug=roadmap.slug,
+        roadmap_title=roadmap.title,
+        roadmap_source=roadmap.source,
+        content_md=content_md,
+        resources=resources,
+        prerequisites=[ref(by_id[e.from_node_id]) for e in roadmap.edges if e.to_node_id == node.id],
+        unlocks=[ref(by_id[e.to_node_id]) for e in roadmap.edges if e.from_node_id == node.id],
     )

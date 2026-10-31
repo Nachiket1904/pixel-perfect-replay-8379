@@ -56,3 +56,32 @@ class RoadmapOut(RoadmapSummaryOut):
     nodes: list[NodeOut]
     edges: list[EdgeOut]
     created_at: datetime
+
+
+# ---------- Topic page (Day 10) ----------
+
+
+class ResourceOut(BaseModel):
+    title: str
+    url: str
+    kind: Literal["docs", "video", "article", "course", "search"]
+    is_free: bool
+
+
+class NodeRef(BaseModel):
+    id: str  # node key
+    title: str
+    status: NodeStatus = "not_started"
+
+
+class NodeDetailOut(NodeOut):
+    roadmap_id: uuid.UUID
+    roadmap_slug: str
+    roadmap_title: str
+    roadmap_source: RoadmapSource
+    content_md: str
+    resources: list[ResourceOut]
+    exercise: None = None  # ExercisePreview on Day 17
+    linked_paper: None = None  # PaperSummary on Day 23
+    prerequisites: list[NodeRef]
+    unlocks: list[NodeRef]
