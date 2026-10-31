@@ -1,0 +1,156 @@
+{
+  "slug": "ml-engineer",
+  "title": "ML Engineer",
+  "description": "A structured path through machine learning foundations and practice.",
+  "level": "intermediate",
+  "estimated_hours": 68,
+  "nodes": [
+    {
+      "key": "ml-math",
+      "title": "Math foundations",
+      "summary": "Review the linear algebra, calculus, and statistics used in machine learning.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 0,
+      "resources": []
+    },
+    {
+      "key": "ml-python",
+      "title": "Python data stack",
+      "summary": "Work fluently with NumPy, Pandas, and notebooks.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 120,
+      "resources": []
+    },
+    {
+      "key": "ml-data",
+      "title": "Data preparation",
+      "summary": "Clean, validate, and prepare datasets for model development.",
+      "node_type": "topic",
+      "x": -170,
+      "y": 240,
+      "resources": []
+    },
+    {
+      "key": "ml-supervised",
+      "title": "Supervised learning",
+      "summary": "Fit and evaluate regression and classification models.",
+      "node_type": "topic",
+      "x": 170,
+      "y": 240,
+      "resources": []
+    },
+    {
+      "key": "ml-evaluation",
+      "title": "Model evaluation",
+      "summary": "Choose metrics, validate models, and understand overfitting.",
+      "node_type": "topic",
+      "x": 170,
+      "y": 360,
+      "resources": []
+    },
+    {
+      "key": "ml-unsupervised",
+      "title": "Unsupervised learning",
+      "summary": "Explore clustering and dimensionality reduction techniques.",
+      "node_type": "topic",
+      "x": -170,
+      "y": 360,
+      "resources": []
+    },
+    {
+      "key": "ml-deep",
+      "title": "Neural networks",
+      "summary": "Learn the building blocks of deep learning and neural networks.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 480,
+      "resources": []
+    },
+    {
+      "key": "ml-deploy",
+      "title": "Model serving",
+      "summary": "Package a trained model behind a reliable inference interface.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 600,
+      "resources": []
+    },
+    {
+      "key": "ml-monitor",
+      "title": "Monitoring & iteration",
+      "summary": "Track model behavior and plan thoughtful updates.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 720,
+      "resources": []
+    },
+    {
+      "key": "ml-capstone",
+      "title": "Milestone: ship an ML project",
+      "summary": "Apply the workflow from data preparation through deployment.",
+      "node_type": "milestone",
+      "x": 0,
+      "y": 840,
+      "resources": []
+    }
+  ],
+  "edges": [
+    {
+      "from": "ml-math",
+      "to": "ml-data",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "ml-python",
+      "to": "ml-data",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "ml-math",
+      "to": "ml-supervised",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "ml-python",
+      "to": "ml-supervised",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "ml-supervised",
+      "to": "ml-evaluation",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "ml-data",
+      "to": "ml-unsupervised",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "ml-evaluation",
+      "to": "ml-deep",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "ml-unsupervised",
+      "to": "ml-deep",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "ml-deep",
+      "to": "ml-deploy",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "ml-deploy",
+      "to": "ml-monitor",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "ml-monitor",
+      "to": "ml-capstone",
+      "kind": "prerequisite"
+    }
+  ]
+}

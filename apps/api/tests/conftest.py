@@ -29,11 +29,15 @@ async def _schema() -> AsyncIterator[None]:
     await engine.dispose()
 
 
+# Every table tests write to. Add new tables here.
+TABLES = "roadmap_edges, roadmap_nodes, roadmaps, refresh_tokens, users"
+
+
 @pytest.fixture(autouse=True)
 async def _clean_tables() -> AsyncIterator[None]:
     yield
     async with engine.begin() as conn:
-        await conn.execute(text("TRUNCATE refresh_tokens, users RESTART IDENTITY CASCADE"))
+        await conn.execute(text(f"TRUNCATE {TABLES} RESTART IDENTITY CASCADE"))
 
 
 @pytest.fixture
@@ -51,3 +55,44 @@ async def registered(client: AsyncClient) -> AsyncClient:
     r = await client.post("/api/v1/auth/register", json=USER)
     assert r.status_code == 201, r.text
     return client
+
+
+def roadmap_data(**overrides):  # noqa: ANN001, ANN201
+    """A small valid official roadmap: a -> b -> c, plus a -> c (optional)."""
+    data = {
+        "slug": "demo",
+        "title": "Demo roadmap",
+        "description": "For tests",
+        "level": "beginner",
+        "estimated_hours": 5,
+        "nodes": [
+            {"key": "a", "title": "A", "summary": "first", "x": 0, "y": 0, "content_md": "## A"},
+            {
+                "key": "b",
+                "title": "B",
+                "x": 0,
+                "y": 120,
+                "resources": [{"title": "Docs", "url": "https://example.com/b", "kind": "docs"}],
+            },
+            {"key": "c", "title": "C", "x": 0, "y": 240},
+        ],
+        "edges": [
+            {"from": "a", "to": "b"},
+            {"from": "b", "to": "c"},
+            {"from": "a", "to": "c", "kind": "optional"},
+        ],
+    }
+    data.update(overrides)
+    return data
+
+
+@pytest.fixture
+async def seeded() -> None:
+    """Seed the demo roadmap into the test DB."""
+    from app.core.db import SessionLocal
+    from app.modules.roadmaps.content import RoadmapIn
+    from app.modules.roadmaps.seed import upsert_official
+
+    async with SessionLocal() as session:
+        await upsert_official(session, RoadmapIn.model_validate(roadmap_data()))
+        await session.commit()

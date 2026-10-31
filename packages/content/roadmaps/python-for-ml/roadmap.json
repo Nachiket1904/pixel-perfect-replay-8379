@@ -1,0 +1,283 @@
+{
+  "slug": "python-for-ml",
+  "title": "Python for ML",
+  "description": "Build a practical Python foundation for machine learning.",
+  "level": "beginner",
+  "estimated_hours": 42,
+  "nodes": [
+    {
+      "key": "py-basics",
+      "title": "Python basics",
+      "summary": "Set up Python and get comfortable with syntax, variables, and expressions.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 0,
+      "resources": [
+        {
+          "title": "The Python Tutorial (official)",
+          "url": "https://docs.python.org/3/tutorial/",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: python basics for beginners",
+          "url": "https://www.youtube.com/results?search_query=python%20basics%20for%20beginners",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
+    },
+    {
+      "key": "py-types",
+      "title": "Data types & control flow",
+      "summary": "Work with built-in types, conditions, loops, and iteration.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 120,
+      "resources": [
+        {
+          "title": "More control flow tools (official)",
+          "url": "https://docs.python.org/3/tutorial/controlflow.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: python lists dicts loops",
+          "url": "https://www.youtube.com/results?search_query=python%20lists%20dicts%20loops",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
+    },
+    {
+      "key": "py-functions",
+      "title": "Functions & modules",
+      "summary": "Write reusable functions and organize code into modules.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 240,
+      "resources": [
+        {
+          "title": "Modules (official)",
+          "url": "https://docs.python.org/3/tutorial/modules.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: python functions and modules",
+          "url": "https://www.youtube.com/results?search_query=python%20functions%20and%20modules",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
+    },
+    {
+      "key": "py-envs",
+      "title": "Virtual envs & pip",
+      "summary": "Create isolated environments and manage dependencies with pip.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 360,
+      "resources": [
+        {
+          "title": "Virtual environments and packages (official)",
+          "url": "https://docs.python.org/3/tutorial/venv.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: python venv pip tutorial",
+          "url": "https://www.youtube.com/results?search_query=python%20venv%20pip%20tutorial",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
+    },
+    {
+      "key": "py-numpy",
+      "title": "NumPy",
+      "summary": "Use arrays, vectorized operations, and basic numerical computing.",
+      "node_type": "topic",
+      "x": -180,
+      "y": 480,
+      "resources": [
+        {
+          "title": "NumPy: the absolute basics (official)",
+          "url": "https://numpy.org/doc/stable/user/absolute_beginners.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: numpy tutorial for machine learning",
+          "url": "https://www.youtube.com/results?search_query=numpy%20tutorial%20for%20machine%20learning",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
+    },
+    {
+      "key": "py-pandas",
+      "title": "Pandas",
+      "summary": "Load, clean, explore, and transform tabular data.",
+      "node_type": "topic",
+      "x": 180,
+      "y": 480,
+      "resources": [
+        {
+          "title": "Pandas getting-started tutorials (official)",
+          "url": "https://pandas.pydata.org/docs/getting_started/intro_tutorials/index.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: pandas tutorial for beginners",
+          "url": "https://www.youtube.com/results?search_query=pandas%20tutorial%20for%20beginners",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
+    },
+    {
+      "key": "py-matplotlib",
+      "title": "Matplotlib",
+      "summary": "Create clear plots to inspect data and communicate results.",
+      "node_type": "topic",
+      "x": 180,
+      "y": 600,
+      "resources": [
+        {
+          "title": "Pyplot tutorial (official)",
+          "url": "https://matplotlib.org/stable/tutorials/pyplot.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: matplotlib tutorial",
+          "url": "https://www.youtube.com/results?search_query=matplotlib%20tutorial",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
+    },
+    {
+      "key": "py-linear-algebra",
+      "title": "Linear algebra essentials",
+      "summary": "Understand vectors, matrices, and operations used in ML.",
+      "node_type": "topic",
+      "x": -180,
+      "y": 600,
+      "resources": []
+    },
+    {
+      "key": "py-probability",
+      "title": "Probability & statistics",
+      "summary": "Review distributions, probability, descriptive statistics, and sampling.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 720,
+      "resources": []
+    },
+    {
+      "key": "py-jupyter",
+      "title": "Jupyter workflow",
+      "summary": "Explore ideas in notebooks and keep experiments reproducible.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 840,
+      "resources": [
+        {
+          "title": "Project Jupyter documentation",
+          "url": "https://docs.jupyter.org/en/latest/",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: jupyter notebook tutorial",
+          "url": "https://www.youtube.com/results?search_query=jupyter%20notebook%20tutorial",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
+    },
+    {
+      "key": "py-mini-project",
+      "title": "Mini project: data analysis",
+      "summary": "Bring the tools together in a small exploratory analysis.",
+      "node_type": "topic",
+      "x": 0,
+      "y": 960,
+      "resources": []
+    },
+    {
+      "key": "py-ready",
+      "title": "Milestone: ready for ML",
+      "summary": "A checkpoint to move into foundational machine learning concepts.",
+      "node_type": "milestone",
+      "x": 0,
+      "y": 1080,
+      "resources": []
+    }
+  ],
+  "edges": [
+    {
+      "from": "py-basics",
+      "to": "py-types",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "py-types",
+      "to": "py-functions",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "py-functions",
+      "to": "py-envs",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "py-envs",
+      "to": "py-numpy",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "py-envs",
+      "to": "py-pandas",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "py-numpy",
+      "to": "py-linear-algebra",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "py-pandas",
+      "to": "py-matplotlib",
+      "kind": "optional"
+    },
+    {
+      "from": "py-linear-algebra",
+      "to": "py-probability",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "py-matplotlib",
+      "to": "py-probability",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "py-probability",
+      "to": "py-jupyter",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "py-jupyter",
+      "to": "py-mini-project",
+      "kind": "prerequisite"
+    },
+    {
+      "from": "py-mini-project",
+      "to": "py-ready",
+      "kind": "prerequisite"
+    }
+  ]
+}
