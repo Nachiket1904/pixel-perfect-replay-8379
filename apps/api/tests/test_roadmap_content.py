@@ -85,3 +85,14 @@ async def test_seed_is_idempotent_and_keeps_node_ids(seeded: None) -> None:
     assert after.nodes[0].title == "A renamed"
     async with SessionLocal() as session:
         assert await session.scalar(select(func.count()).select_from(RoadmapEdge)) == 1
+
+
+def test_every_official_node_has_content_and_resources() -> None:
+    """Day 13: no official topic should fall back to the generic page."""
+    missing = [
+        f"{r.slug}/{n.key}"
+        for r in discover(DEFAULT_CONTENT_DIR)
+        for n in r.nodes
+        if not n.content_md.strip() or not n.resources
+    ]
+    assert missing == []

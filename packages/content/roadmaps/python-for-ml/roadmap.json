@@ -166,7 +166,26 @@
       "node_type": "topic",
       "x": -180,
       "y": 600,
-      "resources": []
+      "resources": [
+        {
+          "title": "3Blue1Brown: Essence of linear algebra",
+          "url": "https://www.3blue1brown.com/topics/linear-algebra",
+          "kind": "video",
+          "is_free": true
+        },
+        {
+          "title": "Khan Academy: Linear algebra",
+          "url": "https://www.khanacademy.org/math/linear-algebra",
+          "kind": "course",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: linear algebra for machine learning",
+          "url": "https://www.youtube.com/results?search_query=linear%20algebra%20for%20machine%20learning",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "py-probability",
@@ -175,7 +194,26 @@
       "node_type": "topic",
       "x": 0,
       "y": 720,
-      "resources": []
+      "resources": [
+        {
+          "title": "Seeing Theory: visual probability (Brown University)",
+          "url": "https://seeing-theory.brown.edu/",
+          "kind": "course",
+          "is_free": true
+        },
+        {
+          "title": "Khan Academy: Statistics and probability",
+          "url": "https://www.khanacademy.org/math/statistics-probability",
+          "kind": "course",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: probability and statistics for machine learning",
+          "url": "https://www.youtube.com/results?search_query=probability%20and%20statistics%20for%20machine%20learning",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "py-jupyter",
@@ -206,7 +244,26 @@
       "node_type": "topic",
       "x": 0,
       "y": 960,
-      "resources": []
+      "resources": [
+        {
+          "title": "Kaggle Learn: Pandas",
+          "url": "https://www.kaggle.com/learn/pandas",
+          "kind": "course",
+          "is_free": true
+        },
+        {
+          "title": "Kaggle datasets",
+          "url": "https://www.kaggle.com/datasets",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: exploratory data analysis pandas project",
+          "url": "https://www.youtube.com/results?search_query=exploratory%20data%20analysis%20pandas%20project",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "py-ready",
@@ -215,7 +272,14 @@
       "node_type": "milestone",
       "x": 0,
       "y": 1080,
-      "resources": []
+      "resources": [
+        {
+          "title": "Google Machine Learning Crash Course",
+          "url": "https://developers.google.com/machine-learning/crash-course",
+          "kind": "course",
+          "is_free": true
+        }
+      ]
     }
   ],
   "edges": [

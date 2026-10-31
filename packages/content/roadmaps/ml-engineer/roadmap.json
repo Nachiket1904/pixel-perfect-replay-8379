@@ -12,7 +12,26 @@
       "node_type": "topic",
       "x": 0,
       "y": 0,
-      "resources": []
+      "resources": [
+        {
+          "title": "Mathematics for Machine Learning (free book)",
+          "url": "https://mml-book.github.io/",
+          "kind": "article",
+          "is_free": true
+        },
+        {
+          "title": "3Blue1Brown: Essence of calculus",
+          "url": "https://www.3blue1brown.com/topics/calculus",
+          "kind": "video",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: gradient descent explained",
+          "url": "https://www.youtube.com/results?search_query=gradient%20descent%20explained",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "ml-python",
@@ -21,7 +40,26 @@
       "node_type": "topic",
       "x": 0,
       "y": 120,
-      "resources": []
+      "resources": [
+        {
+          "title": "NumPy: the absolute basics (official)",
+          "url": "https://numpy.org/doc/stable/user/absolute_beginners.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "pandas: Getting started (official)",
+          "url": "https://pandas.pydata.org/docs/getting_started/index.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: numpy pandas tutorial",
+          "url": "https://www.youtube.com/results?search_query=numpy%20pandas%20tutorial",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "ml-data",
@@ -30,7 +68,26 @@
       "node_type": "topic",
       "x": -170,
       "y": 240,
-      "resources": []
+      "resources": [
+        {
+          "title": "scikit-learn: Preprocessing data",
+          "url": "https://scikit-learn.org/stable/modules/preprocessing.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "Kaggle Learn: Data cleaning",
+          "url": "https://www.kaggle.com/learn/data-cleaning",
+          "kind": "course",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: data leakage machine learning",
+          "url": "https://www.youtube.com/results?search_query=data%20leakage%20machine%20learning",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "ml-supervised",
@@ -39,7 +96,26 @@
       "node_type": "topic",
       "x": 170,
       "y": 240,
-      "resources": []
+      "resources": [
+        {
+          "title": "scikit-learn: Supervised learning",
+          "url": "https://scikit-learn.org/stable/supervised_learning.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "Google Machine Learning Crash Course",
+          "url": "https://developers.google.com/machine-learning/crash-course",
+          "kind": "course",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: supervised learning scikit-learn tutorial",
+          "url": "https://www.youtube.com/results?search_query=supervised%20learning%20scikit-learn%20tutorial",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "ml-evaluation",
@@ -48,7 +124,26 @@
       "node_type": "topic",
       "x": 170,
       "y": 360,
-      "resources": []
+      "resources": [
+        {
+          "title": "scikit-learn: Model evaluation",
+          "url": "https://scikit-learn.org/stable/modules/model_evaluation.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "scikit-learn: Cross-validation",
+          "url": "https://scikit-learn.org/stable/modules/cross_validation.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: precision recall f1 explained",
+          "url": "https://www.youtube.com/results?search_query=precision%20recall%20f1%20explained",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "ml-unsupervised",
@@ -57,7 +152,26 @@
       "node_type": "topic",
       "x": -170,
       "y": 360,
-      "resources": []
+      "resources": [
+        {
+          "title": "scikit-learn: Clustering",
+          "url": "https://scikit-learn.org/stable/modules/clustering.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "scikit-learn: Decomposition (PCA)",
+          "url": "https://scikit-learn.org/stable/modules/decomposition.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: pca k-means clustering tutorial",
+          "url": "https://www.youtube.com/results?search_query=pca%20k-means%20clustering%20tutorial",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "ml-deep",
@@ -66,7 +180,26 @@
       "node_type": "topic",
       "x": 0,
       "y": 480,
-      "resources": []
+      "resources": [
+        {
+          "title": "PyTorch: Learn the basics (official)",
+          "url": "https://pytorch.org/tutorials/beginner/basics/intro.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "3Blue1Brown: Neural networks",
+          "url": "https://www.3blue1brown.com/topics/neural-networks",
+          "kind": "video",
+          "is_free": true
+        },
+        {
+          "title": "fast.ai: Practical Deep Learning",
+          "url": "https://course.fast.ai/",
+          "kind": "course",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "ml-deploy",
@@ -75,7 +208,26 @@
       "node_type": "topic",
       "x": 0,
       "y": 600,
-      "resources": []
+      "resources": [
+        {
+          "title": "FastAPI documentation",
+          "url": "https://fastapi.tiangolo.com/",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "scikit-learn: Model persistence",
+          "url": "https://scikit-learn.org/stable/model_persistence.html",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: deploy machine learning model fastapi docker",
+          "url": "https://www.youtube.com/results?search_query=deploy%20machine%20learning%20model%20fastapi%20docker",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "ml-monitor",
@@ -84,7 +236,26 @@
       "node_type": "topic",
       "x": 0,
       "y": 720,
-      "resources": []
+      "resources": [
+        {
+          "title": "Google: Rules of Machine Learning",
+          "url": "https://developers.google.com/machine-learning/guides/rules-of-ml",
+          "kind": "article",
+          "is_free": true
+        },
+        {
+          "title": "Evidently AI documentation",
+          "url": "https://docs.evidentlyai.com/",
+          "kind": "docs",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: ml model monitoring data drift",
+          "url": "https://www.youtube.com/results?search_query=ml%20model%20monitoring%20data%20drift",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     },
     {
       "key": "ml-capstone",
@@ -93,7 +264,20 @@
       "node_type": "milestone",
       "x": 0,
       "y": 840,
-      "resources": []
+      "resources": [
+        {
+          "title": "Made With ML",
+          "url": "https://madewithml.com/",
+          "kind": "course",
+          "is_free": true
+        },
+        {
+          "title": "YouTube: end to end machine learning project",
+          "url": "https://www.youtube.com/results?search_query=end%20to%20end%20machine%20learning%20project",
+          "kind": "search",
+          "is_free": true
+        }
+      ]
     }
   ],
   "edges": [
