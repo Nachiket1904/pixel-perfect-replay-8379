@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run lint
+      - run: bunx tsc --noEmit
+      - run: bun run test
+      - run: bun run build
+
+  api:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/api
+    services:
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: padhlo
+          POSTGRES_PASSWORD: padhlo
+          POSTGRES_DB: padhlo
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U padhlo" --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports: ["6379:6379"]
+    env:
+      ENV: test
+      DATABASE_URL: postgresql+asyncpg://padhlo:padhlo@localhost:5432/padhlo
+      TEST_DATABASE_URL: postgresql+asyncpg://padhlo:padhlo@localhost:5432/padhlo
+      REDIS_URL: redis://localhost:6379/0
+      JWT_SECRET: dev-only-ci-secret-that-is-long-enough-0000
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run alembic upgrade head
+      - run: uv run alembic check
+      - run: uv run pytest -q

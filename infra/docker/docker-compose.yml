@@ -1,0 +1,34 @@
+# Local dev services only. The API itself runs with `uv run uvicorn --reload` for fast reloads.
+# Usage (from repo root): docker compose -f infra/docker/docker-compose.yml up -d
+name: padhlo
+
+services:
+  db:
+    image: pgvector/pgvector:pg17   # Postgres 17 + pgvector (needed from the Paper Lab onwards)
+    environment:
+      POSTGRES_USER: padhlo
+      POSTGRES_PASSWORD: padhlo     # local only
+      POSTGRES_DB: padhlo
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U padhlo -d padhlo"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pgdata:

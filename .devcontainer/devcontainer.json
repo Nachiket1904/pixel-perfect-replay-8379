@@ -1,0 +1,19 @@
+{
+  "name": "PadhLo",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "22" },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "npm install -g bun && pip install --user uv && cd apps/web && bun install && cd ../api && uv sync",
+  "forwardPorts": [8080, 8000],
+  "portsAttributes": {
+    "8080": { "label": "web" },
+    "8000": { "label": "api" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": ["charliermarsh.ruff", "ms-python.python", "dbaeumer.vscode-eslint", "esbenp.prettier-vscode"]
+    }
+  }
+}
