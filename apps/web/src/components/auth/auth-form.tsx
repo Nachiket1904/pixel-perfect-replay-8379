@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useHydrated, useNavigate } from "@tanstack/react-router";
 import { Loader2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
@@ -19,6 +19,7 @@ type FieldName = "name" | "email" | "password";
 /** Login and signup share one form. The server is the source of truth for validation. */
 export function AuthForm({ mode, redirect }: AuthFormProps) {
   const navigate = useNavigate();
+  const hydrated = useHydrated();
   const loginMutation = useLogin();
   const signupMutation = useSignup();
   const mutation = mode === "login" ? loginMutation : signupMutation;
@@ -73,7 +74,9 @@ export function AuthForm({ mode, redirect }: AuthFormProps) {
           : "Log in to continue your roadmaps."}
       </p>
 
-      <form onSubmit={onSubmit} className="mt-8 space-y-4">
+      {/* method="post": if someone submits before the page hydrates, the browser must never put
+          the password in the URL (history, logs). The button also stays disabled until then. */}
+      <form method="post" onSubmit={onSubmit} className="mt-8 space-y-4">
         {isSignup && (
           <Field label="Name" name="name" error={fieldErrors.name}>
             <Input
@@ -124,7 +127,7 @@ export function AuthForm({ mode, redirect }: AuthFormProps) {
           </p>
         )}
 
-        <Button type="submit" className="w-full" disabled={mutation.isPending}>
+        <Button type="submit" className="w-full" disabled={!hydrated || mutation.isPending}>
           {mutation.isPending && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
           {isSignup ? "Create account" : "Log in"}
         </Button>
