@@ -18,6 +18,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ReposRouteImport } from './routes/repos'
 import { Route as SignupRouteImport } from './routes/signup'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as ImplementationsIdRouteImport } from './routes/implementations.$id'
 import { Route as PapersIndexRouteImport } from './routes/papers.index'
 import { Route as PapersIdRouteImport } from './routes/papers.$id'
 import { Route as RoadmapsIndexRouteImport } from './routes/roadmaps.index'
@@ -69,6 +70,11 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImplementationsIdRoute = ImplementationsIdRouteImport.update({
+  id: '/implementations/$id',
+  path: '/implementations/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PapersIndexRoute = PapersIndexRouteImport.update({
   id: '/papers/',
   path: '/papers/',
@@ -105,6 +111,7 @@ export interface FileRoutesByFullPath {
   '/repos': typeof ReposRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/implementations/$id': typeof ImplementationsIdRoute
   '/papers/$id': typeof PapersIdRoute
   '/papers/': typeof PapersIndexRoute
   '/roadmaps/': typeof RoadmapsIndexRoute
@@ -121,6 +128,7 @@ export interface FileRoutesByTo {
   '/repos': typeof ReposRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/implementations/$id': typeof ImplementationsIdRoute
   '/papers/$id': typeof PapersIdRoute
   '/papers': typeof PapersIndexRoute
   '/roadmaps': typeof RoadmapsIndexRoute
@@ -138,6 +146,7 @@ export interface FileRoutesById {
   '/repos': typeof ReposRoute
   '/signup': typeof SignupRoute
   '/terms': typeof TermsRoute
+  '/implementations/$id': typeof ImplementationsIdRoute
   '/papers/$id': typeof PapersIdRoute
   '/papers/': typeof PapersIndexRoute
   '/roadmaps/': typeof RoadmapsIndexRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/repos'
     | '/signup'
     | '/terms'
+    | '/implementations/$id'
     | '/papers/$id'
     | '/papers/'
     | '/roadmaps/'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/repos'
     | '/signup'
     | '/terms'
+    | '/implementations/$id'
     | '/papers/$id'
     | '/papers'
     | '/roadmaps'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/repos'
     | '/signup'
     | '/terms'
+    | '/implementations/$id'
     | '/papers/$id'
     | '/papers/'
     | '/roadmaps/'
@@ -205,6 +217,7 @@ export interface RootRouteChildren {
   ReposRoute: typeof ReposRoute
   SignupRoute: typeof SignupRoute
   TermsRoute: typeof TermsRoute
+  ImplementationsIdRoute: typeof ImplementationsIdRoute
   PapersIdRoute: typeof PapersIdRoute
   PapersIndexRoute: typeof PapersIndexRoute
   RoadmapsIndexRoute: typeof RoadmapsIndexRoute
@@ -277,6 +290,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/implementations/$id': {
+      id: '/implementations/$id'
+      path: '/implementations/$id'
+      fullPath: '/implementations/$id'
+      preLoaderRoute: typeof ImplementationsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/papers/': {
       id: '/papers/'
       path: '/papers'
@@ -325,6 +345,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReposRoute: ReposRoute,
   SignupRoute: SignupRoute,
   TermsRoute: TermsRoute,
+  ImplementationsIdRoute: ImplementationsIdRoute,
   PapersIdRoute: PapersIdRoute,
   PapersIndexRoute: PapersIndexRoute,
   RoadmapsIndexRoute: RoadmapsIndexRoute,
