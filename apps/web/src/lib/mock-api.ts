@@ -262,6 +262,8 @@ export async function getDashboard(): Promise<Dashboard> {
   return {
     active,
     featured_papers: mockPapers.filter((p) => p.has_implementation).map(toPaperSummary),
+    streak_days: active.length > 0 ? 1 : 0,
+    activity: active.length > 0 ? "today" : "never",
   };
 }
 

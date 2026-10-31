@@ -9,7 +9,6 @@ import {
   Sparkles,
   Video,
 } from "lucide-react";
-import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +24,7 @@ import { CodeBlock } from "@/components/common/code-block";
 import { Markdown } from "@/components/common/markdown";
 import { ErrorState } from "@/components/common/states";
 import { PaperCard } from "@/components/papers/paper-card";
-import { statusDotClass, statusLabel } from "@/components/roadmap/status";
+import { showProgressError, statusDotClass, statusLabel } from "@/components/roadmap/status";
 import { useNode, useUpdateNodeStatus } from "@/lib/queries";
 import type { NodeDetail, NodeRef, NodeStatus, ResourceKind } from "@/lib/types";
 
@@ -67,10 +66,7 @@ function TopicView({ node }: { node: NodeDetail }) {
   const updateStatus = useUpdateNodeStatus({ id: node.roadmap_id, slug: node.roadmap_slug });
 
   const onStatusChange = (status: NodeStatus) =>
-    updateStatus.mutate(
-      { nodeId: node.id, status },
-      { onError: () => toast.error("Couldn't save your progress. Please try again.") },
-    );
+    updateStatus.mutate({ nodeId: node.id, status }, { onError: showProgressError });
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">

@@ -5,11 +5,14 @@ import { request } from "@/lib/http";
 import * as mock from "@/lib/mock-api";
 import {
   ApiError,
+  type Dashboard,
   type LoginRequest,
+  type NodeStatus,
   type NodeDetail,
   type RegisterRequest,
   type Roadmap,
   type RoadmapSummary,
+  type StatusResult,
   type User,
 } from "@/lib/types";
 
@@ -70,4 +73,38 @@ export async function getNode(slug: string, nodeId: string): Promise<NodeDetail>
     if (error instanceof ApiError && error.code === "NOT_FOUND") return mock.getNode(slug, nodeId);
     throw error;
   }
+}
+
+// ---------- Progress (Day 11) ----------
+
+/** Saves a topic's status for the logged-in user. Throws NOT_AUTHENTICATED when logged out. */
+export async function updateNodeStatus(
+  roadmap: { id: string; slug: string },
+  nodeId: string,
+  status: NodeStatus,
+): Promise<StatusResult | void> {
+  try {
+    return await request<StatusResult>(
+      `/roadmaps/${encodeURIComponent(roadmap.slug)}/nodes/${encodeURIComponent(nodeId)}/progress`,
+      { method: "PUT", body: { status } },
+    );
+  } catch (error) {
+    // TODO(Day 19): remove with the other mock fallbacks ("Build my roadmap" is still mocked).
+    if (error instanceof ApiError && error.code === "NOT_FOUND")
+      return mock.updateNodeStatus(roadmap.id, nodeId, status);
+    throw error;
+  }
+}
+
+// ---------- Dashboard (Day 12) ----------
+
+type DashboardApi = Omit<Dashboard, "featured_papers">;
+
+export async function getDashboard(): Promise<Dashboard> {
+  // Papers become real on Day 22; until then the featured list comes from the mock.
+  const [real, papers] = await Promise.all([
+    request<DashboardApi>("/users/me/dashboard"),
+    mock.getDashboard().then((d) => d.featured_papers),
+  ]);
+  return { ...real, featured_papers: papers };
 }

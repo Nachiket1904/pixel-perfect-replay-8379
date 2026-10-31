@@ -85,7 +85,7 @@ export function useUpdateNodeStatus(roadmap: { id: string; slug: string }) {
   const roadmapKey = queryKeys.roadmap(roadmap.slug);
 
   return useMutation({
-    mutationFn: ({ nodeId, status }: StatusChange) => updateNodeStatus(roadmap.id, nodeId, status),
+    mutationFn: ({ nodeId, status }: StatusChange) => updateNodeStatus(roadmap, nodeId, status),
     onMutate: async ({ nodeId, status }: StatusChange) => {
       const nodeKey = queryKeys.node(roadmap.slug, nodeId);
       await Promise.all([

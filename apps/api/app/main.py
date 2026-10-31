@@ -13,6 +13,7 @@ from app.core.errors import register_error_handlers
 from app.core.redis import create_redis
 from app.modules.auth.router import router as auth_router
 from app.modules.health.router import router as health_router
+from app.modules.progress.router import router as progress_router
 from app.modules.roadmaps.router import router as roadmaps_router
 from app.modules.users.router import router as users_router
 
@@ -64,6 +65,7 @@ def create_app() -> FastAPI:
     app.include_router(auth_router, prefix=API_PREFIX)
     app.include_router(users_router, prefix=API_PREFIX)
     app.include_router(roadmaps_router, prefix=API_PREFIX)
+    app.include_router(progress_router, prefix=API_PREFIX)
     return app
 
 

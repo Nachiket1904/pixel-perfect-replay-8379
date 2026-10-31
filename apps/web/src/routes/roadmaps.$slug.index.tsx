@@ -1,7 +1,6 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { Clock, LayoutList, Network, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -11,7 +10,12 @@ import { NodeSheet } from "@/components/roadmap/node-sheet";
 import { RoadmapGraph } from "@/components/roadmap/roadmap-graph";
 import { RoadmapList } from "@/components/roadmap/roadmap-list";
 import { SourceBadge } from "@/components/roadmap/source-badge";
-import { levelLabel, statusDotClass, statusLabel } from "@/components/roadmap/status";
+import {
+  levelLabel,
+  showProgressError,
+  statusDotClass,
+  statusLabel,
+} from "@/components/roadmap/status";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useRoadmap, useUpdateNodeStatus } from "@/lib/queries";
 import { ApiError, type NodeStatus, type Roadmap } from "@/lib/types";
@@ -68,10 +72,7 @@ function RoadmapView({ roadmap }: { roadmap: Roadmap }) {
   const selected = roadmap.nodes.find((n) => n.id === selectedId) ?? null;
 
   const onStatusChange = (nodeId: string, status: NodeStatus) => {
-    updateStatus.mutate(
-      { nodeId, status },
-      { onError: () => toast.error("Couldn't save your progress. Please try again.") },
-    );
+    updateStatus.mutate({ nodeId, status }, { onError: showProgressError });
   };
 
   return (

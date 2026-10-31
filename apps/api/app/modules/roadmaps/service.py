@@ -7,13 +7,16 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.errors import AppError
+from app.modules.progress.queries import progress_by_roadmap, statuses_for
 from app.modules.roadmaps.models import Roadmap, RoadmapNode, RoadmapSource, Visibility
 from app.modules.roadmaps.schemas import (
     EdgeOut,
     NodeDetailOut,
     NodeOut,
     NodeRef,
+    NodeStatus,
     Position,
+    ProgressOut,
     ResourceOut,
     RoadmapOut,
     RoadmapSummaryOut,
@@ -24,7 +27,7 @@ RoadmapFilter = Literal["all", "official", "mine"]
 MAX_LIST = 100  # the catalog is small in v1; switch to cursor pagination when it isn't
 
 
-def _visible_to(user: User | None):  # noqa: ANN202
+def visible_to(user: User | None):  # noqa: ANN202
     """Public roadmaps for everyone, plus private ones the user owns."""
     if user is None:
         return Roadmap.visibility == Visibility.public
@@ -48,7 +51,7 @@ async def list_roadmaps(
         .correlate(Roadmap)
         .scalar_subquery()
     )
-    query: Select = select(Roadmap, node_count.label("node_count")).where(_visible_to(user))
+    query: Select = select(Roadmap, node_count.label("node_count")).where(visible_to(user))
     if filter_ == "official":
         query = query.where(Roadmap.source == RoadmapSource.official)
     elif filter_ == "mine":
@@ -59,13 +62,20 @@ async def list_roadmaps(
     ).limit(MAX_LIST)
 
     rows = (await session.execute(query)).all()
-    return [_summary(roadmap, count) for roadmap, count in rows]
+    done_by_roadmap = await progress_by_roadmap(session, user, [r.id for r, _ in rows])
+    out = []
+    for roadmap, count in rows:
+        item = summary(roadmap, count)
+        if roadmap.id in done_by_roadmap:  # null progress = not started
+            item.progress = ProgressOut(done=done_by_roadmap[roadmap.id], total=count)
+        out.append(item)
+    return out
 
 
 async def load_roadmap(session: AsyncSession, user: User | None, slug: str) -> Roadmap:
     roadmap = await session.scalar(
         select(Roadmap)
-        .where(Roadmap.slug == slug, _visible_to(user))
+        .where(Roadmap.slug == slug, visible_to(user))
         .options(selectinload(Roadmap.nodes), selectinload(Roadmap.edges))
     )
     if roadmap is None:
@@ -73,13 +83,18 @@ async def load_roadmap(session: AsyncSession, user: User | None, slug: str) -> R
     return roadmap
 
 
-def to_roadmap_out(roadmap: Roadmap) -> RoadmapOut:
+def to_roadmap_out(roadmap: Roadmap, statuses: dict | None = None) -> RoadmapOut:
+    statuses = statuses or {}
     keys = {n.id: n.key for n in roadmap.nodes}
+    base = summary(roadmap, len(roadmap.nodes))
+    if statuses:
+        done = sum(1 for s in statuses.values() if s == "done")
+        base.progress = ProgressOut(done=done, total=len(roadmap.nodes))
     return RoadmapOut(
-        **_summary(roadmap, len(roadmap.nodes)).model_dump(),
+        **base.model_dump(),
         goal_prompt=roadmap.goal_prompt,
         created_at=roadmap.created_at,
-        nodes=[_node_out(n) for n in roadmap.nodes],
+        nodes=[_node_out(n, statuses.get(n.id, "not_started")) for n in roadmap.nodes],
         edges=[
             EdgeOut(id=e.id, from_node_id=keys[e.from_node_id], to_node_id=keys[e.to_node_id], kind=e.kind)
             for e in roadmap.edges
@@ -87,7 +102,7 @@ def to_roadmap_out(roadmap: Roadmap) -> RoadmapOut:
     )
 
 
-def _summary(roadmap: Roadmap, node_count: int) -> RoadmapSummaryOut:
+def summary(roadmap: Roadmap, node_count: int) -> RoadmapSummaryOut:
     return RoadmapSummaryOut(
         id=roadmap.id,
         slug=roadmap.slug,
@@ -100,8 +115,14 @@ def _summary(roadmap: Roadmap, node_count: int) -> RoadmapSummaryOut:
     )
 
 
-def _node_out(node: RoadmapNode) -> NodeOut:
+async def get_roadmap(session: AsyncSession, user: User | None, slug: str) -> RoadmapOut:
+    roadmap = await load_roadmap(session, user, slug)
+    return to_roadmap_out(roadmap, await statuses_for(session, user, roadmap.id))
+
+
+def _node_out(node: RoadmapNode, status: NodeStatus = "not_started") -> NodeOut:
     return NodeOut(
+        status=status,
         id=node.key,
         title=node.title,
         summary=node.summary,
@@ -138,12 +159,14 @@ async def get_node(session: AsyncSession, user: User | None, slug: str, key: str
     if node is None:
         raise AppError("NOT_FOUND", f"Topic “{key}” was not found.", status.HTTP_404_NOT_FOUND)
 
+    statuses = await statuses_for(session, user, roadmap.id)
+
     def ref(n: RoadmapNode) -> NodeRef:
-        return NodeRef(id=n.key, title=n.title)
+        return NodeRef(id=n.key, title=n.title, status=statuses.get(n.id, "not_started"))
 
     content_md, resources = _fallback_content(node)
     return NodeDetailOut(
-        **_node_out(node).model_dump(),
+        **_node_out(node, statuses.get(node.id, "not_started")).model_dump(),
         roadmap_id=roadmap.id,
         roadmap_slug=roadmap.slug,
         roadmap_title=roadmap.title,

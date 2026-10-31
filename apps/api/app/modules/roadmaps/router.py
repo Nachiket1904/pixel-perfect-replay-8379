@@ -24,8 +24,7 @@ async def list_roadmaps(
 
 @router.get("/{slug}", response_model=RoadmapOut)
 async def get_roadmap(slug: Slug, session: SessionDep, user: OptionalUser):
-    roadmap = await service.load_roadmap(session, user, slug)
-    return service.to_roadmap_out(roadmap)
+    return await service.get_roadmap(session, user, slug)
 
 
 @router.get("/{slug}/nodes/{node_key}", response_model=NodeDetailOut)

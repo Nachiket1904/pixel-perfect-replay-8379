@@ -133,6 +133,17 @@ export interface ActiveRoadmap {
 export interface Dashboard {
   active: ActiveRoadmap[];
   featured_papers: PaperSummary[];
+  streak_days: number;
+  /** When the learner last made progress, relative to today (IST). */
+  activity: "today" | "yesterday" | "lapsed" | "never";
+}
+
+/** Mirrors StatusOut in apps/api/app/modules/progress/schemas.py. */
+export interface StatusResult {
+  node_id: string;
+  status: NodeStatus;
+  done: number;
+  total: number;
 }
 
 // ---------- Papers ----------

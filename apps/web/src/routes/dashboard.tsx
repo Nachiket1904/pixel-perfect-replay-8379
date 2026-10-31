@@ -1,5 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Map, Sparkles } from "lucide-react";
+import { ArrowRight, Flame, Map, Sparkles } from "lucide-react";
 
 import { RequireAuth } from "@/components/auth/require-auth";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { PaperCard, PaperCardSkeleton } from "@/components/papers/paper-card";
 import { SourceBadge } from "@/components/roadmap/source-badge";
 import { pageMeta } from "@/lib/seo";
 import { useDashboard } from "@/lib/queries";
-import type { ActiveRoadmap } from "@/lib/types";
+import type { ActiveRoadmap, Dashboard } from "@/lib/types";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => pageMeta("Dashboard", "Continue your roadmaps and pick your next topic."),
@@ -29,10 +29,15 @@ function DashboardPage() {
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-      <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-        Your learning
-      </h1>
-      <p className="mt-2 text-muted-foreground">Pick up where you left off.</p>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Your learning
+          </h1>
+          <p className="mt-2 text-muted-foreground">Pick up where you left off.</p>
+        </div>
+        {dashboard.data && <StreakChip dashboard={dashboard.data} />}
+      </div>
 
       <section className="mt-8" aria-labelledby="continue-heading">
         <h2 id="continue-heading" className="text-xl font-semibold text-foreground">
@@ -145,6 +150,33 @@ function ContinueCard({ item }: { item: ActiveRoadmap }) {
         ) : (
           <p className="text-sm font-medium text-success">Roadmap complete. Nice work!</p>
         )}
+      </div>
+    </div>
+  );
+}
+
+function StreakChip({ dashboard }: { dashboard: Dashboard }) {
+  const { streak_days, activity } = dashboard;
+  const hint =
+    activity === "today"
+      ? "You learned today."
+      : activity === "yesterday"
+        ? "Mark a topic today to keep it going."
+        : "Mark a topic to start a streak.";
+  return (
+    <div
+      className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3"
+      aria-label={`${streak_days}-day streak. ${hint}`}
+    >
+      <Flame
+        className={streak_days > 0 ? "size-6 text-warning" : "size-6 text-muted-foreground"}
+        aria-hidden="true"
+      />
+      <div>
+        <p className="font-semibold leading-tight text-foreground">
+          {streak_days} day{streak_days === 1 ? "" : "s"}
+        </p>
+        <p className="text-xs text-muted-foreground">{hint}</p>
       </div>
     </div>
   );
