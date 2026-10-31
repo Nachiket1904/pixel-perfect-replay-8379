@@ -1,3 +1,0 @@
-- [ ] Fix TanStack link typing by restoring typed page routes and repair the homepage route-match test.
-- [ ] Complete the PadhLo shell and placeholders for every requested URL with route-specific metadata.
-- [ ] Verify data rules, routes, mobile rendering, tests, and production build.
