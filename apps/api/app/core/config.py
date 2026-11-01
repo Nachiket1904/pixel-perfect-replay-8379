@@ -52,6 +52,20 @@ class Settings(BaseSettings):
     auth_ip_limit_per_minute: int = 10
     login_email_limit_per_minute: int = 5
 
+    # AI roadmap generator (Day 19-20). "disabled" answers GENERATOR_UNAVAILABLE and the UI
+    # points learners to official roadmaps; "fake" builds a canned roadmap offline (dev/tests).
+    llm_provider: Literal["anthropic", "fake", "disabled"] = "disabled"
+    anthropic_api_key: SecretStr | None = None
+    llm_model: str = "claude-haiku-5-5"
+    llm_max_tokens: int = 8000
+    llm_timeout_seconds: float = 60.0
+    # USD per million tokens, for the spend cap. Check current prices before changing the model.
+    llm_input_usd_per_mtok: float = 0.10
+    llm_output_usd_per_mtok: float = 0.50
+    llm_daily_budget_usd: float = 2.0  # whole app, per IST day; the generator pauses above it
+    generator_daily_limit: int = 3  # successful roadmaps per learner per IST day
+    generator_daily_attempts: int = 8  # LLM calls per learner per day, including rejected goals
+
     @field_validator("database_url")
     @classmethod
     def _normalize_db(cls, v: str) -> str:
@@ -71,6 +85,10 @@ class Settings(BaseSettings):
                 raise ValueError("Set a real JWT_SECRET outside local development")
             if not self.cookie_secure:
                 raise ValueError("COOKIE_SECURE must be true outside local development")
+            if self.llm_provider == "fake":
+                raise ValueError("LLM_PROVIDER=fake is for local development only")
+        if self.llm_provider == "anthropic" and self.anthropic_api_key is None:
+            raise ValueError("Set ANTHROPIC_API_KEY when LLM_PROVIDER=anthropic")
         return self
 
     @property
