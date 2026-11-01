@@ -103,11 +103,55 @@ export interface NodeRef {
   status: NodeStatus;
 }
 
+export interface ExerciseTest {
+  name: string;
+  /** Python run after the learner's code (usually asserts). Shown to the learner. */
+  code: string;
+}
+
+/** Mirrors ExerciseOut in apps/api/app/modules/exercises/schemas.py. Never has the solution. */
 export interface ExercisePreview {
   id: string;
   title: string;
   language: "python";
+  prompt_md: string;
   starter_code: string;
+  tests: ExerciseTest[];
+  hints_count: number;
+}
+
+export type SubmissionStatus = "passed" | "failed" | "error";
+
+export interface SubmissionTestResult {
+  name: string;
+  passed: boolean;
+  message: string;
+}
+
+export interface Submission {
+  id: string;
+  status: SubmissionStatus;
+  code: string;
+  results: SubmissionTestResult[];
+  error: string | null;
+  runtime_ms: number;
+  /** Always false in v1: browser runs can't be trusted (server re-runs arrive with the sandbox). */
+  verified: boolean;
+  created_at: string;
+}
+
+export interface SubmissionsSummary {
+  latest: Submission | null;
+  attempts: number;
+  passed_ever: boolean;
+}
+
+export interface SubmissionRequest {
+  code: string;
+  status: SubmissionStatus;
+  results: SubmissionTestResult[];
+  error: string | null;
+  runtime_ms: number;
 }
 
 export interface NodeDetail extends RoadmapNode {

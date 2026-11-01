@@ -71,6 +71,9 @@ The exercise below asks you to write a function that normalises a list of number
       id: "ex-normalise",
       title: "Normalise a list",
       language: "python",
+      prompt_md: "",
+      tests: [],
+      hints_count: 0,
       starter_code: `def normalise(values):
     """Scale values so the smallest becomes 0 and the largest becomes 1."""
     # TODO: handle the case where all values are equal
@@ -116,6 +119,9 @@ The linked paper explains how NumPy's design became the foundation of scientific
       id: "ex-numpy-zscore",
       title: "Z-score with NumPy",
       language: "python",
+      prompt_md: "",
+      tests: [],
+      hints_count: 0,
       starter_code: `import numpy as np
 
 def zscore(x: np.ndarray) -> np.ndarray:

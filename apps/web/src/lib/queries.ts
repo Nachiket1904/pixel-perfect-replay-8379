@@ -11,11 +11,13 @@ import {
   getNode,
   getPaper,
   getRoadmap,
+  getSubmissions,
   listRoadmaps,
   login,
   logout,
   register,
   searchPapers,
+  submitExercise,
   updateNodeStatus,
 } from "@/lib/api";
 import type {
@@ -26,6 +28,7 @@ import type {
   NodeStatus,
   PaperSearchParams,
   Roadmap,
+  SubmissionRequest,
 } from "@/lib/types";
 
 export type RoadmapFilter = "all" | "official" | "mine";
@@ -40,6 +43,7 @@ export const queryKeys = {
   paperSearch: (params: PaperSearchParams) => ["papers", "search", params] as const,
   paper: (id: string) => ["paper", id] as const,
   implementation: (id: string) => ["implementation", id] as const,
+  submissions: (exerciseId: string) => ["submissions", exerciseId] as const,
 };
 
 export function useRoadmaps(filter: RoadmapFilter) {
@@ -190,5 +194,25 @@ export function useLogout() {
       queryClient.clear();
       queryClient.setQueryData(queryKeys.me, null);
     },
+  });
+}
+
+// ---------- Exercises (Day 17) ----------
+
+/** Attempt history for one exercise. Only for logged-in learners. */
+export function useSubmissions(exerciseId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.submissions(exerciseId),
+    queryFn: () => getSubmissions(exerciseId),
+    enabled,
+    retry: false,
+  });
+}
+
+export function useSubmitExercise(exerciseId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: SubmissionRequest) => submitExercise(exerciseId, body),
+    onSuccess: (summary) => queryClient.setQueryData(queryKeys.submissions(exerciseId), summary),
   });
 }

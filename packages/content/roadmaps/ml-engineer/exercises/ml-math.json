@@ -1,0 +1,28 @@
+{
+  "title": "Gradient descent by hand",
+  "prompt_md": "Write `minimise(start, learning_rate, steps)` that runs gradient descent on `f(x) = (x - 3) ** 2` and returns the final `x`.\n\n- The derivative is `2 * (x - 3)`\n- Each step: `x = x - learning_rate * gradient`\n- With a sensible learning rate, the answer should get very close to `3`\n\nTry printing `x` every few steps to watch it move.",
+  "starter_code": "def gradient(x):\n    return 2 * (x - 3)\n\n\ndef minimise(start, learning_rate, steps):\n    x = start\n    # Repeat `steps` times: move x a little way downhill\n    return x\n\n\nprint(minimise(start=0, learning_rate=0.1, steps=50))\n",
+  "solution_code": "def gradient(x):\n    return 2 * (x - 3)\n\n\ndef minimise(start, learning_rate, steps):\n    x = start\n    for _ in range(steps):\n        x = x - learning_rate * gradient(x)\n    return x\n\n\nprint(minimise(start=0, learning_rate=0.1, steps=50))\n",
+  "tests": [
+    {
+      "name": "Gets close to 3",
+      "code": "r = minimise(0, 0.1, 100)\nassert abs(r - 3) < 1e-3, f\"After 100 steps from 0 you should be near 3, got {r!r}\""
+    },
+    {
+      "name": "Zero steps changes nothing",
+      "code": "assert minimise(5, 0.1, 0) == 5, \"With steps=0, return the start value\""
+    },
+    {
+      "name": "Takes exactly one step",
+      "code": "r = minimise(0, 0.1, 1)\nassert abs(r - 0.6) < 1e-9, f\"One step from 0 with lr 0.1 should give 0.6, got {r!r}\""
+    },
+    {
+      "name": "Works from the other side",
+      "code": "r = minimise(10, 0.1, 100)\nassert abs(r - 3) < 1e-3, f\"Starting at 10 should also end near 3, got {r!r}\""
+    }
+  ],
+  "hints": [
+    "Use a for loop: `for _ in range(steps):`.",
+    "Inside the loop: `x = x - learning_rate * gradient(x)`."
+  ]
+}

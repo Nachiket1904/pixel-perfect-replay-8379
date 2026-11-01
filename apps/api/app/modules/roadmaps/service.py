@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.core.errors import AppError
+from app.modules.exercises.queries import exercise_for_node, node_ids_with_exercises
 from app.modules.progress.queries import progress_by_roadmap, statuses_for
 from app.modules.roadmaps.models import Roadmap, RoadmapNode, RoadmapSource, Visibility
 from app.modules.roadmaps.schemas import (
@@ -83,8 +84,11 @@ async def load_roadmap(session: AsyncSession, user: User | None, slug: str) -> R
     return roadmap
 
 
-def to_roadmap_out(roadmap: Roadmap, statuses: dict | None = None) -> RoadmapOut:
+def to_roadmap_out(
+    roadmap: Roadmap, statuses: dict | None = None, with_exercise: set | None = None
+) -> RoadmapOut:
     statuses = statuses or {}
+    with_exercise = with_exercise or set()
     keys = {n.id: n.key for n in roadmap.nodes}
     base = summary(roadmap, len(roadmap.nodes))
     if statuses:
@@ -94,7 +98,7 @@ def to_roadmap_out(roadmap: Roadmap, statuses: dict | None = None) -> RoadmapOut
         **base.model_dump(),
         goal_prompt=roadmap.goal_prompt,
         created_at=roadmap.created_at,
-        nodes=[_node_out(n, statuses.get(n.id, "not_started")) for n in roadmap.nodes],
+        nodes=[_node_out(n, statuses.get(n.id, "not_started"), n.id in with_exercise) for n in roadmap.nodes],
         edges=[
             EdgeOut(id=e.id, from_node_id=keys[e.from_node_id], to_node_id=keys[e.to_node_id], kind=e.kind)
             for e in roadmap.edges
@@ -117,12 +121,15 @@ def summary(roadmap: Roadmap, node_count: int) -> RoadmapSummaryOut:
 
 async def get_roadmap(session: AsyncSession, user: User | None, slug: str) -> RoadmapOut:
     roadmap = await load_roadmap(session, user, slug)
-    return to_roadmap_out(roadmap, await statuses_for(session, user, roadmap.id))
+    statuses = await statuses_for(session, user, roadmap.id)
+    with_exercise = await node_ids_with_exercises(session, [n.id for n in roadmap.nodes])
+    return to_roadmap_out(roadmap, statuses, with_exercise)
 
 
-def _node_out(node: RoadmapNode, status: NodeStatus = "not_started") -> NodeOut:
+def _node_out(node: RoadmapNode, status: NodeStatus = "not_started", has_exercise: bool = False) -> NodeOut:
     return NodeOut(
         status=status,
+        has_exercise=has_exercise,
         id=node.key,
         title=node.title,
         summary=node.summary,
@@ -165,8 +172,10 @@ async def get_node(session: AsyncSession, user: User | None, slug: str, key: str
         return NodeRef(id=n.key, title=n.title, status=statuses.get(n.id, "not_started"))
 
     content_md, resources = _fallback_content(node)
+    exercise = await exercise_for_node(session, node.id)
     return NodeDetailOut(
-        **_node_out(node, statuses.get(node.id, "not_started")).model_dump(),
+        **_node_out(node, statuses.get(node.id, "not_started"), exercise is not None).model_dump(),
+        exercise=exercise,
         roadmap_id=roadmap.id,
         roadmap_slug=roadmap.slug,
         roadmap_title=roadmap.title,

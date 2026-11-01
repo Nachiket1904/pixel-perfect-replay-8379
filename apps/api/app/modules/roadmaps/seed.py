@@ -18,6 +18,7 @@ from sqlalchemy.orm import selectinload
 
 from app import models  # noqa: F401  (registers every table, e.g. users for the owner FK)
 from app.core.db import SessionLocal, engine
+from app.modules.exercises.models import Exercise
 from app.modules.roadmaps.content import RoadmapIn, load_roadmap_dir
 from app.modules.roadmaps.models import (
     Roadmap,
@@ -88,13 +89,37 @@ async def upsert_official(session: AsyncSession, data: RoadmapIn) -> Roadmap:
     for e in data.edges:
         roadmap.edges.append(RoadmapEdge(from_node_id=ids[e.from_key], to_node_id=ids[e.to_key], kind=e.kind))
     await session.flush()
+
+    # 4) Exercises, matched by node so learners' submissions stay attached across edits.
+    exercises = {
+        e.node_id: e
+        for e in await session.scalars(select(Exercise).where(Exercise.node_id.in_(ids.values())))
+    }
+    for n in data.nodes:
+        current = exercises.pop(ids[n.key], None)
+        if n.exercise is None:
+            if current is not None:
+                log.warning("%s/%s: removing exercise (no longer in content)", data.slug, n.key)
+                await session.delete(current)
+            continue
+        if current is None:
+            current = Exercise(node_id=ids[n.key])
+            session.add(current)
+        current.title = n.exercise.title
+        current.prompt_md = n.exercise.prompt_md
+        current.starter_code = n.exercise.starter_code
+        current.solution_code = n.exercise.solution_code
+        current.tests = [t.model_dump() for t in n.exercise.tests]
+        current.hints = list(n.exercise.hints)
+    await session.flush()
     return roadmap
 
 
 async def run(content_dir: Path, check_only: bool) -> None:
     roadmaps = discover(content_dir)  # validate everything before touching the database
     for r in roadmaps:
-        log.info("valid: %s (%d nodes, %d edges)", r.slug, len(r.nodes), len(r.edges))
+        n_ex = sum(1 for n in r.nodes if n.exercise)
+        log.info("valid: %s (%d nodes, %d edges, %d exercises)", r.slug, len(r.nodes), len(r.edges), n_ex)
     if check_only:
         return
 

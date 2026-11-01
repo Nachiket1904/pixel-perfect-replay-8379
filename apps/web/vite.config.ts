@@ -18,6 +18,8 @@ export default defineConfig({
     server: { entry: "server" },
   },
   vite: {
+    // The Pyodide worker uses import() to load Python from the CDN, which needs a module worker.
+    worker: { format: "es" },
     server: {
       proxy: {
         "/api": {

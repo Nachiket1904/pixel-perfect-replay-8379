@@ -1,0 +1,28 @@
+{
+  "title": "Write an average() function",
+  "prompt_md": "Write a function `average(numbers)` that returns the mean of a list of numbers.\n\n- `average([2, 4, 6])` returns `4`\n- An empty list returns `0` instead of crashing\n- Don't use `statistics.mean` or NumPy: use a loop or `sum()` and `len()`\n\nClick **Run** to try your code, then **Check** to run the tests.",
+  "starter_code": "def average(numbers):\n    # Return the mean of numbers, or 0 for an empty list\n    pass\n\n\nprint(average([2, 4, 6]))  # should print 4.0\n",
+  "solution_code": "def average(numbers):\n    if not numbers:\n        return 0\n    return sum(numbers) / len(numbers)\n\n\nprint(average([2, 4, 6]))\n",
+  "tests": [
+    {
+      "name": "Averages a simple list",
+      "code": "assert average([2, 4, 6]) == 4, f\"average([2, 4, 6]) should be 4, got {average([2, 4, 6])!r}\""
+    },
+    {
+      "name": "Works with one number",
+      "code": "assert average([7]) == 7, f\"average([7]) should be 7, got {average([7])!r}\""
+    },
+    {
+      "name": "Handles decimals",
+      "code": "assert abs(average([1, 2]) - 1.5) < 1e-9, f\"average([1, 2]) should be 1.5, got {average([1, 2])!r}\""
+    },
+    {
+      "name": "Empty list returns 0",
+      "code": "assert average([]) == 0, f\"average([]) should be 0, got {average([])!r}\""
+    }
+  ],
+  "hints": [
+    "sum(numbers) adds everything up and len(numbers) counts the items.",
+    "Check `if not numbers:` first, before dividing, so an empty list never reaches the division."
+  ]
+}

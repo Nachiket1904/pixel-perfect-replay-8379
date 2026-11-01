@@ -1,15 +1,5 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import {
-  ArrowLeft,
-  BookOpen,
-  Code2,
-  ExternalLink,
-  FileText,
-  Search,
-  Sparkles,
-  Video,
-} from "lucide-react";
+import { ArrowLeft, BookOpen, ExternalLink, FileText, Search, Sparkles, Video } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,9 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CodeEditor } from "@/components/editor/code-editor";
-import { useDraft } from "@/components/editor/use-draft";
 import { Markdown } from "@/components/common/markdown";
+import { PracticeSection } from "@/components/editor/practice-section";
 import { ErrorState } from "@/components/common/states";
 import { PaperCard } from "@/components/papers/paper-card";
 import { showProgressError, statusDotClass, statusLabel } from "@/components/roadmap/status";
@@ -252,45 +241,5 @@ function TopicSkeleton() {
         <Skeleton className="h-60" />
       </div>
     </div>
-  );
-}
-
-function PracticeSection({ node }: { node: NodeDetail }) {
-  const exercise = node.exercise;
-  // Exercises load the editor straight away; the plain scratchpad waits for a click, so
-  // learners who only read don't download the editor (about 2 MB) on every topic.
-  const [open, setOpen] = useState(exercise !== null);
-  const starter =
-    exercise?.starter_code ??
-    `# Scratchpad for "${node.title}"\n# Try the examples from this topic here.\n`;
-  const [code, setCode] = useDraft(`${node.roadmap_slug}/${node.id}`, starter);
-
-  return (
-    <section aria-labelledby="practice-heading" className="space-y-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="practice-heading" className="text-xl font-semibold text-foreground">
-          {exercise ? `Practice: ${exercise.title}` : "Code scratchpad"}
-        </h2>
-        {!open && (
-          <Button variant="outline" onClick={() => setOpen(true)}>
-            <Code2 className="mr-2 size-4" aria-hidden="true" /> Open scratchpad
-          </Button>
-        )}
-      </div>
-      {open && (
-        <>
-          <CodeEditor
-            label={exercise ? `Code for ${exercise.title}` : `Scratchpad for ${node.title}`}
-            language={exercise?.language ?? "python"}
-            value={code}
-            onChange={setCode}
-            initialValue={starter}
-          />
-          <p className="text-xs text-muted-foreground">
-            Your code is saved in this browser. Running it here is coming soon.
-          </p>
-        </>
-      )}
-    </section>
   );
 }

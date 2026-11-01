@@ -4,4 +4,4 @@
 - Writing small functions that do one thing
 
 ## Practice
-The exercise below asks you to write a function that normalises a list of numbers.
+The exercise below asks you to write an `average()` function and handle the empty-list case.

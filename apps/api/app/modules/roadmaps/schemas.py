@@ -6,6 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+from app.modules.exercises.schemas import ExerciseOut
 from app.modules.roadmaps.models import EdgeKind, Level, NodeType, RoadmapSource
 
 NodeStatus = Literal["not_started", "in_progress", "done"]
@@ -40,7 +41,7 @@ class NodeOut(BaseModel):
     node_type: NodeType
     position: Position
     status: NodeStatus = "not_started"  # per-user status arrives on Day 11
-    has_exercise: bool = False  # exercises arrive on Day 17
+    has_exercise: bool = False
     linked_paper_id: str | None = None  # papers arrive on Day 23
 
 
@@ -81,7 +82,7 @@ class NodeDetailOut(NodeOut):
     roadmap_source: RoadmapSource
     content_md: str
     resources: list[ResourceOut]
-    exercise: None = None  # ExercisePreview on Day 17
+    exercise: ExerciseOut | None = None
     linked_paper: None = None  # PaperSummary on Day 23
     prerequisites: list[NodeRef]
     unlocks: list[NodeRef]

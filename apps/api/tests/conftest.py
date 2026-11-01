@@ -30,7 +30,10 @@ async def _schema() -> AsyncIterator[None]:
 
 
 # Every table tests write to. Add new tables here.
-TABLES = "user_node_progress, roadmap_edges, roadmap_nodes, roadmaps, refresh_tokens, users"
+TABLES = (
+    "submissions, exercises, user_node_progress, roadmap_edges, roadmap_nodes, roadmaps,"
+    " refresh_tokens, users"
+)
 
 
 @pytest.fixture(autouse=True)

@@ -13,6 +13,8 @@ import {
   type Roadmap,
   type RoadmapSummary,
   type StatusResult,
+  type SubmissionRequest,
+  type SubmissionsSummary,
   type User,
 } from "@/lib/types";
 
@@ -107,4 +109,23 @@ export async function getDashboard(): Promise<Dashboard> {
     mock.getDashboard().then((d) => d.featured_papers),
   ]);
   return { ...real, featured_papers: papers };
+}
+
+// ---------- Exercises (Day 17) ----------
+
+/** Saves a browser run. The server stores it as unverified (the browser can't be trusted). */
+export function submitExercise(
+  exerciseId: string,
+  body: SubmissionRequest,
+): Promise<SubmissionsSummary> {
+  return request<SubmissionsSummary>(`/exercises/${encodeURIComponent(exerciseId)}/submissions`, {
+    method: "POST",
+    body,
+  });
+}
+
+export function getSubmissions(exerciseId: string): Promise<SubmissionsSummary> {
+  return request<SubmissionsSummary>(
+    `/exercises/${encodeURIComponent(exerciseId)}/submissions/latest`,
+  );
 }

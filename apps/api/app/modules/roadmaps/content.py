@@ -39,6 +39,33 @@ class ResourceIn(BaseModel):
         return v
 
 
+class TestCaseIn(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=120)
+    code: str = Field(min_length=1, max_length=5000)  # Python, usually asserts
+
+
+class ExerciseIn(BaseModel):
+    """packages/content/roadmaps/<slug>/exercises/<node-key>.json (one per topic in v1)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str = Field(min_length=1, max_length=200)
+    prompt_md: str = Field(min_length=1, max_length=10_000)
+    starter_code: str = Field(max_length=20_000)
+    solution_code: str = Field(min_length=1, max_length=20_000)
+    tests: list[TestCaseIn] = Field(min_length=1, max_length=20)
+    hints: list[str] = Field(default_factory=list, max_length=5)
+
+    @model_validator(mode="after")
+    def _unique_test_names(self) -> "ExerciseIn":
+        names = [t.name for t in self.tests]
+        if len(names) != len(set(names)):
+            raise ValueError("Test names must be unique within an exercise")
+        return self
+
+
 class NodeIn(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -50,6 +77,7 @@ class NodeIn(BaseModel):
     y: float = 0
     resources: list[ResourceIn] = Field(default_factory=list, max_length=20)
     content_md: str = Field(default="", max_length=MAX_CONTENT_CHARS)
+    exercise: ExerciseIn | None = None
 
 
 class EdgeIn(BaseModel):
@@ -122,6 +150,14 @@ def load_roadmap_dir(directory: Path) -> RoadmapIn:
             if node.get("content_md"):
                 raise ValueError(f"{node['key']}: content is both inline and in {md_file.name}")
             node["content_md"] = md_file.read_text(encoding="utf-8").strip()
+    exercises_dir = directory / "exercises"
+    if exercises_dir.is_dir():
+        by_key = {n.get("key"): n for n in raw.get("nodes", [])}
+        for ex_file in sorted(exercises_dir.glob("*.json")):
+            node = by_key.get(ex_file.stem)
+            if node is None:
+                raise ValueError(f"{ex_file.name}: no node with key {ex_file.stem!r}")
+            node["exercise"] = json.loads(ex_file.read_text(encoding="utf-8"))
     roadmap = RoadmapIn.model_validate(raw)
     if roadmap.slug != directory.name:
         raise ValueError(f"Folder name {directory.name!r} must match slug {roadmap.slug!r}")

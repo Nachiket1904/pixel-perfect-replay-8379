@@ -96,3 +96,35 @@ def test_every_official_node_has_content_and_resources() -> None:
         if not n.content_md.strip() or not n.resources
     ]
     assert missing == []
+
+
+def _run_exercise(code: str, tests: list) -> list[bool]:
+    """Same idea as the browser harness, in CPython. Content is ours, so exec is fine here."""
+    import contextlib
+    import io
+
+    ns: dict = {"__name__": "__main__"}
+    with contextlib.redirect_stdout(io.StringIO()):
+        exec(compile(code, "<code>", "exec"), ns)  # noqa: S102
+        results = []
+        for t in tests:
+            try:
+                exec(compile(t.code, f"<test {t.name}>", "exec"), ns)  # noqa: S102
+                results.append(True)
+            except Exception:  # noqa: BLE001
+                results.append(False)
+    return results
+
+
+def test_every_exercise_solution_passes_and_starter_fails() -> None:
+    """Day 17: a broken reference solution or an already-solved starter is a content bug."""
+    checked = 0
+    for r in discover(DEFAULT_CONTENT_DIR):
+        for n in r.nodes:
+            if n.exercise is None:
+                continue
+            where = f"{r.slug}/{n.key}"
+            assert all(_run_exercise(n.exercise.solution_code, n.exercise.tests)), where
+            assert not all(_run_exercise(n.exercise.starter_code, n.exercise.tests)), where
+            checked += 1
+    assert checked >= 2
