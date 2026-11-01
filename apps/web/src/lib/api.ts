@@ -6,6 +6,8 @@ import * as mock from "@/lib/mock-api";
 import {
   ApiError,
   type Dashboard,
+  type GenerateRoadmapRequest,
+  type GenerationQuota,
   type LoginRequest,
   type NodeStatus,
   type NodeDetail,
@@ -54,50 +56,30 @@ export function listRoadmaps(
   return request<RoadmapSummary[]>(`/roadmaps?filter=${encodeURIComponent(filter)}`);
 }
 
-export async function getRoadmap(slug: string): Promise<Roadmap> {
-  try {
-    return await request<Roadmap>(`/roadmaps/${encodeURIComponent(slug)}`);
-  } catch (error) {
-    // TODO(Day 19): remove. "Build my roadmap" is still mocked, so its roadmaps only exist
-    // in the mock store. The mock throws NOT_FOUND itself for anything else.
-    if (error instanceof ApiError && error.code === "NOT_FOUND") return mock.getRoadmap(slug);
-    throw error;
-  }
+export function getRoadmap(slug: string): Promise<Roadmap> {
+  return request<Roadmap>(`/roadmaps/${encodeURIComponent(slug)}`);
 }
 
 // ---------- Topic page (Day 10) ----------
 
-export async function getNode(slug: string, nodeId: string): Promise<NodeDetail> {
-  try {
-    return await request<NodeDetail>(
-      `/roadmaps/${encodeURIComponent(slug)}/nodes/${encodeURIComponent(nodeId)}`,
-    );
-  } catch (error) {
-    // TODO(Day 19): remove with the getRoadmap fallback above (mock "Build my roadmap").
-    if (error instanceof ApiError && error.code === "NOT_FOUND") return mock.getNode(slug, nodeId);
-    throw error;
-  }
+export function getNode(slug: string, nodeId: string): Promise<NodeDetail> {
+  return request<NodeDetail>(
+    `/roadmaps/${encodeURIComponent(slug)}/nodes/${encodeURIComponent(nodeId)}`,
+  );
 }
 
 // ---------- Progress (Day 11) ----------
 
 /** Saves a topic's status for the logged-in user. Throws NOT_AUTHENTICATED when logged out. */
-export async function updateNodeStatus(
+export function updateNodeStatus(
   roadmap: { id: string; slug: string },
   nodeId: string,
   status: NodeStatus,
-): Promise<StatusResult | void> {
-  try {
-    return await request<StatusResult>(
-      `/roadmaps/${encodeURIComponent(roadmap.slug)}/nodes/${encodeURIComponent(nodeId)}/progress`,
-      { method: "PUT", body: { status } },
-    );
-  } catch (error) {
-    // TODO(Day 19): remove with the other mock fallbacks ("Build my roadmap" is still mocked).
-    if (error instanceof ApiError && error.code === "NOT_FOUND")
-      return mock.updateNodeStatus(roadmap.id, nodeId, status);
-    throw error;
-  }
+): Promise<StatusResult> {
+  return request<StatusResult>(
+    `/roadmaps/${encodeURIComponent(roadmap.slug)}/nodes/${encodeURIComponent(nodeId)}/progress`,
+    { method: "PUT", body: { status } },
+  );
 }
 
 // ---------- Dashboard (Day 12) ----------
@@ -142,4 +124,15 @@ export function getHint(exerciseId: string, index: number): Promise<Hint> {
 /** The reference solution. The server answers FORBIDDEN until enough attempts are saved. */
 export function getSolution(exerciseId: string): Promise<Solution> {
   return request<Solution>(`/exercises/${encodeURIComponent(exerciseId)}/solution`);
+}
+
+// ---------- AI roadmap generator (Days 19-20) ----------
+
+/** Builds a private roadmap from the learner's goal. Login required; limits are enforced server-side. */
+export function generateRoadmap(body: GenerateRoadmapRequest): Promise<Roadmap> {
+  return request<Roadmap>("/generator/roadmaps", { method: "POST", body });
+}
+
+export function getGenerationQuota(): Promise<GenerationQuota> {
+  return request<GenerationQuota>("/generator/quota");
 }

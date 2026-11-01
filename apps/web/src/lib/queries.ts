@@ -62,8 +62,14 @@ export function useRoadmap(slug: string) {
   });
 }
 
-export function useGenerationQuota() {
-  return useQuery({ queryKey: queryKeys.quota, queryFn: getGenerationQuota });
+/** Only for logged-in learners: the quota endpoint needs a session. */
+export function useGenerationQuota(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.quota,
+    queryFn: getGenerationQuota,
+    enabled,
+    retry: false,
+  });
 }
 
 export function useGenerateRoadmap() {

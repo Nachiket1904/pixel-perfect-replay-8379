@@ -1,5 +1,5 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { AlertCircle, Check, Info, Loader2, Sparkles } from "lucide-react";
+import { AlertCircle, Check, Info, Loader2, LogIn, Sparkles } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -15,8 +15,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { RoadmapCard, RoadmapCardSkeleton } from "@/components/roadmap/roadmap-card";
 import { pageMeta } from "@/lib/seo";
-import { useGenerateRoadmap, useGenerationQuota, useRoadmaps } from "@/lib/queries";
-import { ApiError, type Level } from "@/lib/types";
+import { useGenerateRoadmap, useGenerationQuota, useMe, useRoadmaps } from "@/lib/queries";
+import { generatorErrorMessage as errorMessage } from "@/components/roadmap/generator-errors";
+import { type Level } from "@/lib/types";
 
 const GOAL_MIN = 10;
 const GOAL_MAX = 300;
@@ -48,40 +49,12 @@ const hourOptions = [3, 6, 10, 15];
 
 const loadingSteps = ["Understanding your goal", "Ordering topics", "Adding free resources"];
 
-function errorMessage(error: unknown): { title: string; body: string; showOfficial: boolean } {
-  const code = error instanceof ApiError ? error.code : "SERVER_ERROR";
-  switch (code) {
-    case "NON_TECH_GOAL":
-      return {
-        title: "That goal is outside what we cover",
-        body: "PadhLo builds tech learning roadmaps. Try a programming, data or AI goal.",
-        showOfficial: false,
-      };
-    case "RATE_LIMITED":
-      return {
-        title: "Daily limit reached",
-        body: "You've used today's 3 roadmaps. Try again tomorrow, or start an official roadmap.",
-        showOfficial: true,
-      };
-    case "VALIDATION_ERROR":
-      return {
-        title: "Please check your goal",
-        body: error instanceof Error ? error.message : "Something in the form needs fixing.",
-        showOfficial: false,
-      };
-    default:
-      return {
-        title: "Something went wrong",
-        body: "We couldn't build your roadmap this time. Please try again in a moment.",
-        showOfficial: false,
-      };
-  }
-}
-
 function BuildPage() {
   const search = Route.useSearch();
   const navigate = useNavigate();
-  const quota = useGenerationQuota();
+  const me = useMe();
+  const loggedIn = Boolean(me.data);
+  const quota = useGenerationQuota(loggedIn);
   const official = useRoadmaps("official");
   const generate = useGenerateRoadmap();
 
@@ -116,7 +89,7 @@ function BuildPage() {
       ? `Write at least ${GOAL_MIN} characters so we understand your goal.`
       : null;
   const noQuota = quota.data?.remaining === 0;
-  const canSubmit = !goalError && !generate.isPending && !noQuota;
+  const canSubmit = loggedIn && !goalError && !generate.isPending && !noQuota;
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -247,27 +220,42 @@ function BuildPage() {
 
           <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
-              {quota.isPending && "Checking your daily limit…"}
+              {!loggedIn && !me.isPending && "Free: 3 personalised roadmaps a day."}
+              {loggedIn && quota.isPending && "Checking your daily limit…"}
               {quota.data && `${quota.data.remaining} of ${quota.data.limit} roadmaps left today`}
             </p>
-            <Button
-              type="submit"
-              size="lg"
-              disabled={!canSubmit && (touched || generate.isPending || noQuota)}
-              className="bg-warning text-foreground hover:bg-warning/90"
-            >
-              {generate.isPending ? (
-                <>
-                  <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" />
-                  Generating…
-                </>
-              ) : (
-                <>
-                  <Sparkles className="mr-2 size-4" aria-hidden="true" />
-                  Generate my roadmap
-                </>
-              )}
-            </Button>
+            {!loggedIn && !me.isPending ? (
+              <Button asChild size="lg" className="bg-warning text-foreground hover:bg-warning/90">
+                <Link
+                  to="/login"
+                  search={{
+                    redirect: trimmed ? `/build?goal=${encodeURIComponent(trimmed)}` : "/build",
+                  }}
+                >
+                  <LogIn className="mr-2 size-4" aria-hidden="true" />
+                  Log in to generate
+                </Link>
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                size="lg"
+                disabled={!canSubmit && (touched || generate.isPending || noQuota)}
+                className="bg-warning text-foreground hover:bg-warning/90"
+              >
+                {generate.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" />
+                    Generating…
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="mr-2 size-4" aria-hidden="true" />
+                    Generate my roadmap
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </form>
 
