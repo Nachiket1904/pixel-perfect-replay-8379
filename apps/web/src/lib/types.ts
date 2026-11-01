@@ -144,6 +144,20 @@ export interface SubmissionsSummary {
   latest: Submission | null;
   attempts: number;
   passed_ever: boolean;
+  /** Day 18: the server unlocks the reference solution after N attempts or once solved. */
+  solution_unlocked: boolean;
+  attempts_to_unlock: number;
+}
+
+/** Mirrors HintOut in apps/api/app/modules/exercises/schemas.py. `index` is 1-based. */
+export interface Hint {
+  index: number;
+  total: number;
+  text: string;
+}
+
+export interface Solution {
+  solution_code: string;
 }
 
 export interface SubmissionRequest {

@@ -1,0 +1,28 @@
+{
+  "title": "Count words with a dict",
+  "prompt_md": "Write `word_counts(text)` that returns a dict mapping each word to how many times it appears.\n\n- Words are separated by spaces: use `text.split()`\n- Count case-insensitively: `\"The\"` and `\"the\"` are the same word, stored as `\"the\"`\n- An empty string returns an empty dict `{}`\n\nExample: `word_counts(\"the cat and the hat\")` returns `{\"the\": 2, \"cat\": 1, \"and\": 1, \"hat\": 1}`.\n\nDicts like this show up everywhere in ML: vocabularies, label counts, configs.",
+  "starter_code": "def word_counts(text):\n    counts = {}\n    # Loop over the words and add 1 for each one\n    return counts\n\n\nprint(word_counts(\"the cat and the hat\"))\n",
+  "solution_code": "def word_counts(text):\n    counts = {}\n    for word in text.lower().split():\n        counts[word] = counts.get(word, 0) + 1\n    return counts\n\n\nprint(word_counts(\"the cat and the hat\"))\n",
+  "tests": [
+    {
+      "name": "Counts repeated words",
+      "code": "r = word_counts(\"the cat and the hat\")\nassert r == {\"the\": 2, \"cat\": 1, \"and\": 1, \"hat\": 1}, f\"Got {r!r}\""
+    },
+    {
+      "name": "Ignores upper and lower case",
+      "code": "r = word_counts(\"Data data DATA\")\nassert r == {\"data\": 3}, f\"Expected {{'data': 3}}, got {r!r}\""
+    },
+    {
+      "name": "Empty text gives an empty dict",
+      "code": "r = word_counts(\"\")\nassert r == {}, f\"Expected {{}}, got {r!r}\""
+    },
+    {
+      "name": "Returns a dict",
+      "code": "assert isinstance(word_counts(\"a b\"), dict), \"word_counts should return a dict\""
+    }
+  ],
+  "hints": [
+    "text.lower().split() gives you a list of lowercase words.",
+    "counts.get(word, 0) returns 0 for a word you haven't seen yet, so counts[word] = counts.get(word, 0) + 1 works for new and old words."
+  ]
+}

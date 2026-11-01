@@ -1,0 +1,28 @@
+{
+  "title": "Normalise columns with broadcasting",
+  "prompt_md": "Write `standardise(X)` that takes a 2-D NumPy array (rows are samples, columns are features) and returns a new array where **each column** has mean 0 and standard deviation 1.\n\n- Column means: `X.mean(axis=0)`, column standard deviations: `X.std(axis=0)`\n- Use broadcasting: `(X - means) / stds` works on the whole array at once, no loops\n- If a column never changes (std is 0), leave that column as all zeros instead of dividing by zero\n\nThe first run downloads NumPy into your browser, so it takes a few extra seconds.",
+  "starter_code": "import numpy as np\n\n\ndef standardise(X):\n    X = np.asarray(X, dtype=float)\n    # 1. column means and standard deviations\n    # 2. subtract and divide using broadcasting\n    return X\n\n\nX = np.array([[1.0, 10.0], [2.0, 20.0], [3.0, 30.0]])\nprint(standardise(X))\n",
+  "solution_code": "import numpy as np\n\n\ndef standardise(X):\n    X = np.asarray(X, dtype=float)\n    means = X.mean(axis=0)\n    stds = X.std(axis=0)\n    safe = np.where(stds == 0, 1.0, stds)\n    return (X - means) / safe\n\n\nX = np.array([[1.0, 10.0], [2.0, 20.0], [3.0, 30.0]])\nprint(standardise(X))\n",
+  "tests": [
+    {
+      "name": "Each column has mean 0",
+      "code": "import numpy as np\nZ = standardise(np.array([[1.0, 10.0], [2.0, 20.0], [3.0, 30.0]]))\nassert np.allclose(Z.mean(axis=0), 0), f\"Column means should be 0, got {Z.mean(axis=0)}\""
+    },
+    {
+      "name": "Each column has standard deviation 1",
+      "code": "import numpy as np\nZ = standardise(np.array([[1.0, 10.0], [2.0, 20.0], [3.0, 30.0]]))\nassert np.allclose(Z.std(axis=0), 1), f\"Column stds should be 1, got {Z.std(axis=0)}\""
+    },
+    {
+      "name": "Keeps the shape",
+      "code": "import numpy as np\nassert standardise(np.ones((4, 3)) * np.arange(4)[:, None]).shape == (4, 3), \"The result should have the same shape as X\""
+    },
+    {
+      "name": "Constant column becomes zeros, not NaN",
+      "code": "import numpy as np\nZ = standardise(np.array([[5.0, 1.0], [5.0, 2.0], [5.0, 3.0]]))\nassert not np.isnan(Z).any(), \"Dividing by a zero std produced NaN\"\nassert np.allclose(Z[:, 0], 0), f\"A constant column should become all zeros, got {Z[:, 0]}\""
+    }
+  ],
+  "hints": [
+    "axis=0 means 'down the rows', so X.mean(axis=0) gives one mean per column.",
+    "Replace zero stds before dividing: np.where(stds == 0, 1.0, stds). A constant column minus its mean is already all zeros."
+  ]
+}

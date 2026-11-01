@@ -84,7 +84,13 @@ async def test_submissions_require_login(client: AsyncClient, exercise_id: str):
 
 async def test_submit_and_restore_latest(registered: AsyncClient, exercise_id: str):
     empty = (await registered.get(_url(exercise_id, "/latest"))).json()
-    assert empty == {"latest": None, "attempts": 0, "passed_ever": False}
+    assert empty == {
+        "latest": None,
+        "attempts": 0,
+        "passed_ever": False,
+        "solution_unlocked": False,
+        "attempts_to_unlock": 3,
+    }
 
     r = await registered.post(_url(exercise_id), json=FAIL)
     assert r.status_code == 201, r.text
@@ -108,7 +114,13 @@ async def test_submissions_are_per_user(registered: AsyncClient, exercise_id: st
     other = {**USER, "email": "ravi@example.com"}
     assert (await registered.post(f"{API}/auth/register", json=other)).status_code == 201
     latest = (await registered.get(_url(exercise_id, "/latest"))).json()
-    assert latest == {"latest": None, "attempts": 0, "passed_ever": False}
+    assert latest == {
+        "latest": None,
+        "attempts": 0,
+        "passed_ever": False,
+        "solution_unlocked": False,
+        "attempts_to_unlock": 3,
+    }
 
 
 @pytest.mark.parametrize(
@@ -190,3 +202,49 @@ def test_exercise_file_must_match_a_node(tmp_path):
     (d / "exercises" / "zzz.json").write_text(json.dumps(EXERCISE))
     with pytest.raises(ValueError, match="no node"):
         load_roadmap_dir(d)
+
+
+# ---------- Day 18: hints, solution after 3 attempts, solving finishes the topic ----------
+
+
+async def test_hints_are_revealed_one_by_one_even_when_logged_out(client: AsyncClient, exercise_id: str):
+    r = await client.get(f"{API}/exercises/{exercise_id}/hints/1")
+    assert r.status_code == 200, r.text
+    assert r.json() == {"index": 1, "total": 1, "text": "Multiply by 2."}
+    assert (await client.get(f"{API}/exercises/{exercise_id}/hints/2")).status_code == 404
+    assert (await client.get(f"{API}/exercises/{exercise_id}/hints/0")).status_code == 422
+
+
+async def test_solution_needs_login(client: AsyncClient, exercise_id: str):
+    r = await client.get(f"{API}/exercises/{exercise_id}/solution")
+    assert r.status_code == 401
+
+
+async def test_solution_unlocks_after_three_attempts(registered: AsyncClient, exercise_id: str):
+    solution_url = f"{API}/exercises/{exercise_id}/solution"
+    for attempt in range(1, 4):
+        r = await registered.get(solution_url)
+        assert r.status_code == 403, r.text
+        assert r.json()["error"]["details"] == {"attempts": attempt - 1, "attempts_to_unlock": 3}
+        summary = (await registered.post(_url(exercise_id), json=FAIL)).json()
+        assert summary["solution_unlocked"] is (attempt == 3)
+    r = await registered.get(solution_url)
+    assert r.status_code == 200
+    assert r.json() == {"solution_code": EXERCISE["solution_code"]}
+
+
+async def test_solving_unlocks_solution_and_marks_topic_done(registered: AsyncClient, exercise_id: str):
+    summary = (await registered.post(_url(exercise_id), json=PASS)).json()
+    assert summary["passed_ever"] is True and summary["solution_unlocked"] is True
+    assert (await registered.get(f"{API}/exercises/{exercise_id}/solution")).status_code == 200
+
+    node = (await registered.get(f"{API}/roadmaps/demo/nodes/b")).json()
+    assert node["status"] == "done"
+    roadmap = (await registered.get(f"{API}/roadmaps/demo")).json()
+    assert roadmap["progress"] == {"done": 1, "total": 3}
+
+
+async def test_failed_attempt_does_not_change_topic_status(registered: AsyncClient, exercise_id: str):
+    await registered.post(_url(exercise_id), json=FAIL)
+    node = (await registered.get(f"{API}/roadmaps/demo/nodes/b")).json()
+    assert node["status"] == "not_started"

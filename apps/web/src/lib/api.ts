@@ -12,6 +12,8 @@ import {
   type RegisterRequest,
   type Roadmap,
   type RoadmapSummary,
+  type Hint,
+  type Solution,
   type StatusResult,
   type SubmissionRequest,
   type SubmissionsSummary,
@@ -128,4 +130,16 @@ export function getSubmissions(exerciseId: string): Promise<SubmissionsSummary> 
   return request<SubmissionsSummary>(
     `/exercises/${encodeURIComponent(exerciseId)}/submissions/latest`,
   );
+}
+
+// ---------- Hints and solutions (Day 18) ----------
+
+/** One hint (1-based). Hints are public; the UI just reveals them one at a time. */
+export function getHint(exerciseId: string, index: number): Promise<Hint> {
+  return request<Hint>(`/exercises/${encodeURIComponent(exerciseId)}/hints/${index}`);
+}
+
+/** The reference solution. The server answers FORBIDDEN until enough attempts are saved. */
+export function getSolution(exerciseId: string): Promise<Solution> {
+  return request<Solution>(`/exercises/${encodeURIComponent(exerciseId)}/solution`);
 }

@@ -96,6 +96,20 @@ async def set_status(
     return StatusOut(node_id=key, status=new_status, done=done, total=len(roadmap.nodes))
 
 
+async def mark_done(session: AsyncSession, user: User, node: RoadmapNode) -> None:
+    """Set one topic to done (used when its exercise is solved). The caller commits."""
+    stmt = insert(UserNodeProgress).values(
+        user_id=user.id, node_id=node.id, roadmap_id=node.roadmap_id, status=StoredStatus.done
+    )
+    await session.execute(
+        stmt.on_conflict_do_update(
+            index_elements=[UserNodeProgress.user_id, UserNodeProgress.node_id],
+            set_={"status": stmt.excluded.status, "updated_at": func.now()},
+        )
+    )
+    touch_activity(user)
+
+
 def next_node(roadmap: Roadmap, statuses: dict[uuid.UUID, NodeStatus]) -> RoadmapNode | None:
     """First in-progress topic, else the first not-started topic whose prerequisites are done."""
     for n in roadmap.nodes:

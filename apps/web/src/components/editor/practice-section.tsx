@@ -15,6 +15,7 @@ import {
 } from "@/lib/types";
 
 import { CodeEditor } from "./code-editor";
+import { ExerciseHelp } from "./exercise-help";
 import { OutputPanel } from "./output-panel";
 import { useDraft } from "./use-draft";
 import { usePythonRunner } from "./use-python-runner";
@@ -76,7 +77,7 @@ function ExercisePractice({ node, exercise }: { node: NodeDetail; exercise: Exer
   const me = useMe();
   const loggedIn = Boolean(me.data);
   const submissions = useSubmissions(exercise.id, loggedIn);
-  const submit = useSubmitExercise(exercise.id);
+  const submit = useSubmitExercise(exercise.id, node.roadmap_slug);
   const [checking, setChecking] = useState(false);
 
   // No local draft but a saved attempt on the server (e.g. another device): restore it once.
@@ -107,6 +108,7 @@ function ExercisePractice({ node, exercise }: { node: NodeDetail; exercise: Exer
   }
 
   const summary = submissions.data;
+  const topicPath = `/roadmaps/${node.roadmap_slug}/${node.id}`;
 
   return (
     <section aria-labelledby="practice-heading" className="space-y-4">
@@ -149,7 +151,7 @@ function ExercisePractice({ node, exercise }: { node: NodeDetail; exercise: Exer
             <>
               <Link
                 to="/login"
-                search={{ redirect: `/roadmaps/${node.roadmap_slug}/${node.id}` }}
+                search={{ redirect: topicPath }}
                 className="font-medium text-primary hover:underline"
               >
                 Log in
@@ -161,6 +163,13 @@ function ExercisePractice({ node, exercise }: { node: NodeDetail; exercise: Exer
       </div>
 
       <OutputPanel {...runner} />
+
+      <ExerciseHelp
+        exercise={exercise}
+        summary={summary}
+        loggedIn={loggedIn}
+        redirect={topicPath}
+      />
 
       <details className="rounded-lg border border-border bg-card p-4 text-sm">
         <summary className="cursor-pointer font-medium text-foreground">

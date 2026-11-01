@@ -61,3 +61,16 @@ class SubmissionsSummary(BaseModel):
     latest: SubmissionOut | None
     attempts: int
     passed_ever: bool
+    # Day 18: the reference solution unlocks after N saved attempts (or once solved).
+    solution_unlocked: bool
+    attempts_to_unlock: int
+
+
+class HintOut(BaseModel):
+    index: int  # 1-based
+    total: int
+    text: str
+
+
+class SolutionOut(BaseModel):
+    solution_code: str

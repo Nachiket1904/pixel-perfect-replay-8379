@@ -127,4 +127,4 @@ def test_every_exercise_solution_passes_and_starter_fails() -> None:
             assert all(_run_exercise(n.exercise.solution_code, n.exercise.tests)), where
             assert not all(_run_exercise(n.exercise.starter_code, n.exercise.tests)), where
             checked += 1
-    assert checked >= 2
+    assert checked >= 5  # Day 18: exercises on 4+ topics

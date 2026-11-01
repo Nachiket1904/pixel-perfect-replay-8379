@@ -1,0 +1,29 @@
+{
+  "title": "Precision and recall from scratch",
+  "prompt_md": "Write `precision_recall(y_true, y_pred)` for a binary classifier. Both arguments are lists of `0`s and `1`s of the same length. Return a tuple `(precision, recall)`.\n\n- **True positive (TP):** predicted 1 and actually 1\n- **Precision** = TP / (number of predicted 1s)\n- **Recall** = TP / (number of actual 1s)\n- If a denominator is 0, return `0.0` for that value instead of crashing\n\nNo scikit-learn: count with a loop or `zip`.",
+  "starter_code": "def precision_recall(y_true, y_pred):\n    tp = 0\n    # Count true positives, predicted positives and actual positives\n    return 0.0, 0.0\n\n\nprint(precision_recall([1, 0, 1, 1], [1, 1, 0, 1]))  # (0.666..., 0.666...)\n",
+  "solution_code": "def precision_recall(y_true, y_pred):\n    tp = sum(1 for t, p in zip(y_true, y_pred) if t == 1 and p == 1)\n    predicted = sum(y_pred)\n    actual = sum(y_true)\n    precision = tp / predicted if predicted else 0.0\n    recall = tp / actual if actual else 0.0\n    return precision, recall\n\n\nprint(precision_recall([1, 0, 1, 1], [1, 1, 0, 1]))\n",
+  "tests": [
+    {
+      "name": "Mixed predictions",
+      "code": "p, r = precision_recall([1, 0, 1, 1], [1, 1, 0, 1])\nassert abs(p - 2 / 3) < 1e-9 and abs(r - 2 / 3) < 1e-9, f\"Expected (0.667, 0.667), got {(p, r)!r}\""
+    },
+    {
+      "name": "Perfect predictions",
+      "code": "assert precision_recall([1, 0, 1], [1, 0, 1]) == (1.0, 1.0), f\"Got {precision_recall([1, 0, 1], [1, 0, 1])!r}\""
+    },
+    {
+      "name": "Majority-class model: never predicts 1",
+      "code": "r = precision_recall([1, 0, 0, 0], [0, 0, 0, 0])\nassert r == (0.0, 0.0), f\"No predicted 1s: precision and recall should both be 0.0, got {r!r}\""
+    },
+    {
+      "name": "High recall, low precision",
+      "code": "p, r = precision_recall([1, 0, 0, 0], [1, 1, 1, 1])\nassert abs(p - 0.25) < 1e-9 and r == 1.0, f\"Expected (0.25, 1.0), got {(p, r)!r}\""
+    }
+  ],
+  "hints": [
+    "zip(y_true, y_pred) gives you pairs like (1, 1). A true positive is a pair where both are 1.",
+    "sum(y_pred) counts the predicted 1s and sum(y_true) counts the actual 1s, because the labels are 0 or 1.",
+    "Guard each division: tp / predicted if predicted else 0.0"
+  ]
+}

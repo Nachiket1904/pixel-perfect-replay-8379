@@ -6,11 +6,13 @@ import {
   generateRoadmap,
   getDashboard,
   getGenerationQuota,
+  getHint,
   getImplementation,
   getMe,
   getNode,
   getPaper,
   getRoadmap,
+  getSolution,
   getSubmissions,
   listRoadmaps,
   login,
@@ -44,6 +46,8 @@ export const queryKeys = {
   paper: (id: string) => ["paper", id] as const,
   implementation: (id: string) => ["implementation", id] as const,
   submissions: (exerciseId: string) => ["submissions", exerciseId] as const,
+  hint: (exerciseId: string, index: number) => ["hint", exerciseId, index] as const,
+  solution: (exerciseId: string) => ["solution", exerciseId] as const,
 };
 
 export function useRoadmaps(filter: RoadmapFilter) {
@@ -209,10 +213,44 @@ export function useSubmissions(exerciseId: string, enabled: boolean) {
   });
 }
 
-export function useSubmitExercise(exerciseId: string) {
+/** `slug` is the roadmap of the topic, so solving can refresh its status everywhere. */
+export function useSubmitExercise(exerciseId: string, slug?: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: SubmissionRequest) => submitExercise(exerciseId, body),
-    onSuccess: (summary) => queryClient.setQueryData(queryKeys.submissions(exerciseId), summary),
+    onSuccess: (summary, body) => {
+      queryClient.setQueryData(queryKeys.submissions(exerciseId), summary);
+      if (body.status !== "passed") return;
+      // Day 18: solving an exercise marks its topic done on the server.
+      void queryClient.invalidateQueries({ queryKey: ["roadmaps"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.dashboard });
+      if (slug) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.roadmap(slug) });
+        void queryClient.invalidateQueries({ queryKey: ["node", slug] });
+      }
+    },
+  });
+}
+
+// ---------- Hints and solutions (Day 18) ----------
+
+/** Hints never change, so each one is fetched once and kept. */
+export function useHint(exerciseId: string, index: number, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.hint(exerciseId, index),
+    queryFn: () => getHint(exerciseId, index),
+    enabled,
+    staleTime: Infinity,
+    retry: false,
+  });
+}
+
+export function useSolution(exerciseId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.solution(exerciseId),
+    queryFn: () => getSolution(exerciseId),
+    enabled,
+    staleTime: Infinity,
+    retry: false,
   });
 }
