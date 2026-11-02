@@ -40,6 +40,10 @@ export async function proxyToApi(request: Request): Promise<Response> {
   headers.set("accept-encoding", "identity");
   const publicHost = request.headers.get("x-forwarded-host") ?? request.headers.get("host");
   if (publicHost) headers.set("x-forwarded-host", publicHost);
+  const clientIp =
+    request.headers.get("x-real-ip") ??
+    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+  if (clientIp) headers.set("x-forwarded-for", clientIp);
   if (!headers.has("x-forwarded-proto"))
     headers.set("x-forwarded-proto", incoming.protocol.slice(0, -1));
 
