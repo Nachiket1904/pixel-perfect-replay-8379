@@ -11,7 +11,11 @@ import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 const apiOrigin = process.env["API_ORIGIN"] ?? "http://localhost:8000";
 
 export default defineConfig({
-  nitro: { preset: "node-server" },
+  // nitro: { preset: "node-server" },
+    // Vercel builds need the "vercel" preset; local/Codespaces builds keep node-server.
+  nitro: {
+    preset: process.env["NITRO_PRESET"] ?? (process.env["VERCEL"] ? "vercel" : "node-server"),
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
