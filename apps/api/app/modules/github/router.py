@@ -6,8 +6,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.github import service
 from app.modules.github.deps import get_current_user, get_session
-from app.modules.github.models import Repo, RepoBranch, RepoCommit, RepoTag
-from app.modules.github.schemas import AnalyzeIn, GraphOut, RepoOut
+from app.modules.github.models import Repo, RepoAnalysis
+from app.modules.github.schemas import AnalyzeIn, FileOut, RepoOut, StructureOut
 
 router = APIRouter(prefix="/repos", tags=["github"])
 
@@ -26,7 +26,7 @@ async def analyze_repo(
 
     repo = await session.scalar(select(Repo).where(Repo.owner == owner, Repo.name == name))
     if repo is not None and not service.needs_sync(repo):
-        return repo  # fresh or already syncing: no GitHub calls, no rate-limit charge
+        return repo  # fresh or already running: no GitHub calls, no rate-limit charge
 
     await service.check_analyze_limit(user.id)
     if repo is None:
@@ -46,30 +46,32 @@ async def _get_repo(session: AsyncSession, repo_id: uuid.UUID) -> Repo:
     return repo
 
 
+async def _get_analysis(session: AsyncSession, repo_id: uuid.UUID) -> RepoAnalysis:
+    analysis = await session.get(RepoAnalysis, repo_id)
+    if analysis is None:
+        raise HTTPException(status_code=404, detail="This repository hasn't been analyzed yet.")
+    return analysis
+
+
 @router.get("/{repo_id}", response_model=RepoOut)
 async def get_repo(repo_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
     return await _get_repo(session, repo_id)
 
 
-@router.get("/{repo_id}/graph", response_model=GraphOut)
-async def get_graph(
+@router.get("/{repo_id}/structure", response_model=StructureOut)
+async def get_structure(repo_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+    repo = await _get_repo(session, repo_id)
+    analysis = await _get_analysis(session, repo_id)
+    return {"repo": repo, "analysis": analysis.data}
+
+
+@router.get("/{repo_id}/file", response_model=FileOut)
+async def get_file(
     repo_id: uuid.UUID,
-    limit: int = Query(300, ge=1, le=500),
+    path: str = Query(min_length=1, max_length=500),
     session: AsyncSession = Depends(get_session),
+    user=Depends(get_current_user),
 ):
     repo = await _get_repo(session, repo_id)
-    branches = await session.scalars(
-        select(RepoBranch)
-        .where(RepoBranch.repo_id == repo_id)
-        .order_by(RepoBranch.is_default.desc(), RepoBranch.name)
-    )
-    tags = await session.scalars(
-        select(RepoTag).where(RepoTag.repo_id == repo_id).order_by(RepoTag.released_at.desc().nulls_last())
-    )
-    commits = await session.scalars(
-        select(RepoCommit)
-        .where(RepoCommit.repo_id == repo_id)
-        .order_by(RepoCommit.committed_at.desc())
-        .limit(limit)
-    )
-    return {"repo": repo, "branches": branches.all(), "tags": tags.all(), "commits": commits.all()}
+    analysis = await _get_analysis(session, repo_id)
+    return await service.file_content(repo, analysis, path)

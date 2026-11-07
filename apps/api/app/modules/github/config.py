@@ -8,11 +8,9 @@ class GitHubSettings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
     github_token: SecretStr | None = None  # fine-grained PAT, public repos read-only
-    github_max_commits: int = 300  # commits pulled from the default branch
-    github_max_branches: int = 8  # extra branches to pull commits from
-    github_branch_commits: int = 50  # commits per extra branch
-    github_sync_ttl_minutes: int = 60  # re-sync a repo at most once per hour
+    github_sync_ttl_minutes: int = 60  # re-analyze a repo at most once per hour
     github_analyze_limit_per_hour: int = 10  # per learner
+    github_max_download_mb: int = 80  # tarball size cap (Render free has 512 MB RAM)
     redis_url: str = "redis://localhost:6379/0"
 
 
