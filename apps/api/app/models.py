@@ -2,6 +2,7 @@
 
 from app.modules.auth.models import RefreshToken
 from app.modules.exercises.models import Exercise, Submission
+from app.modules.github import models as github_models  # noqa: F401
 from app.modules.progress.models import UserNodeProgress
 from app.modules.roadmaps.models import Roadmap, RoadmapEdge, RoadmapNode
 from app.modules.users.models import User
