@@ -1,10 +1,13 @@
+import type { ReactNode } from "react";
+
 interface ShellPageProps {
   title: string;
   description: string;
   eyebrow?: string;
+  children?: ReactNode;
 }
 
-export function ShellPage({ title, description, eyebrow = "PadhLo With Us" }: ShellPageProps) {
+export function ShellPage({ title, description, eyebrow = "PadhLo With Us", children }: ShellPageProps) {
   return (
     <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16 lg:px-8">
       <p className="text-sm font-semibold text-primary">{eyebrow}</p>
@@ -13,7 +16,7 @@ export function ShellPage({ title, description, eyebrow = "PadhLo With Us" }: Sh
       </h1>
       <p className="mt-4 max-w-2xl text-base leading-7 text-muted-foreground">{description}</p>
       <div className="mt-10 border-t border-border pt-6">
-        <p className="text-sm text-muted-foreground">This page is being prepared.</p>
+        {children ?? <p className="text-sm text-muted-foreground">This page is being prepared.</p>}
       </div>
     </section>
   );

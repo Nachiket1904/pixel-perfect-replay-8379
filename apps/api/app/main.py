@@ -14,6 +14,7 @@ from app.core.redis import create_redis
 from app.modules.auth.router import router as auth_router
 from app.modules.exercises.router import router as exercises_router
 from app.modules.generator.router import router as generator_router
+from app.modules.github.router import router as github_router
 from app.modules.health.router import router as health_router
 from app.modules.progress.router import router as progress_router
 from app.modules.roadmaps.router import router as roadmaps_router
@@ -70,6 +71,7 @@ def create_app() -> FastAPI:
     app.include_router(progress_router, prefix=API_PREFIX)
     app.include_router(exercises_router, prefix=API_PREFIX)
     app.include_router(generator_router, prefix=API_PREFIX)
+    app.include_router(github_router, prefix=API_PREFIX)
     return app
 
 

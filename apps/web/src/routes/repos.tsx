@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
+import { RepoAnalyzer } from "@/components/repos/RepoAnalyzer";
 import { ShellPage } from "@/components/shell-page";
 
 export const Route = createFileRoute("/repos")({
@@ -8,12 +9,12 @@ export const Route = createFileRoute("/repos")({
       { title: "Repo Visualizer | PadhLo With Us" },
       {
         name: "description",
-        content: "Explore how files and modules in a code repository fit together.",
+        content: "See how a GitHub project grew: its branches, versions and commit history.",
       },
       { property: "og:title", content: "Repo Visualizer | PadhLo With Us" },
       {
         property: "og:description",
-        content: "Explore how files and modules in a code repository fit together.",
+        content: "See how a GitHub project grew: its branches, versions and commit history.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -26,7 +27,9 @@ function ReposPage() {
   return (
     <ShellPage
       title="Repo Visualizer"
-      description="See how a code repository is organized and how its pieces connect."
-    />
+      description="Paste a public GitHub repository to see its branches, versions and commit history."
+    >
+      <RepoAnalyzer />
+    </ShellPage>
   );
 }
