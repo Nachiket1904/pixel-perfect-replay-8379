@@ -16,9 +16,31 @@ from collections import Counter, deque
 from app.modules.github.parsers import CODE_EXTS, ParsedFile, first_sentence, lang_for, parse_file
 
 SKIP_DIRS = {
-    ".git", "node_modules", "dist", "build", "out", ".next", ".nuxt", ".output", ".vercel", "coverage",
-    "__pycache__", ".venv", "venv", "env", "site-packages", "vendor", "third_party", ".tox", ".mypy_cache",
-    ".pytest_cache", ".idea", ".vscode", "bower_components", ".turbo", ".cache",
+    ".git",
+    "node_modules",
+    "dist",
+    "build",
+    "out",
+    ".next",
+    ".nuxt",
+    ".output",
+    ".vercel",
+    "coverage",
+    "__pycache__",
+    ".venv",
+    "venv",
+    "env",
+    "site-packages",
+    "vendor",
+    "third_party",
+    ".tox",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".idea",
+    ".vscode",
+    "bower_components",
+    ".turbo",
+    ".cache",
 }
 MAX_TREE_PATHS = 4000
 MAX_CODE_FILES = 800
@@ -29,7 +51,16 @@ STDLIB = set(getattr(sys, "stdlib_module_names", ()))
 
 FOLDER_ROLES = {
     ("tests", "test", "__tests__", "spec", "e2e"): "Tests that check the code works",
-    ("routes", "routers", "router", "api", "endpoints", "controllers", "views", "handlers"): "Request handlers / API routes",
+    (
+        "routes",
+        "routers",
+        "router",
+        "api",
+        "endpoints",
+        "controllers",
+        "views",
+        "handlers",
+    ): "Request handlers / API routes",
     ("components", "ui", "widgets"): "Reusable UI components",
     ("pages", "screens", "routes-web"): "Pages / screens of the app",
     ("models", "schemas", "entities", "types", "dto"): "Data models and types",
@@ -50,11 +81,40 @@ FOLDER_ROLES = {
     ("auth",): "Authentication and permissions",
 }
 _ROLE_LOOKUP = {name: role for names, role in FOLDER_ROLES.items() for name in names}
-AUX_DIRS = {"tests", "test", "__tests__", "e2e", "scripts", "examples", "example", "docs", "benchmarks", "bench"}
+AUX_DIRS = {
+    "tests",
+    "test",
+    "__tests__",
+    "e2e",
+    "scripts",
+    "examples",
+    "example",
+    "docs",
+    "benchmarks",
+    "bench",
+}
 ENTRY_NAMES = {
-    "main.py", "app.py", "manage.py", "__main__.py", "wsgi.py", "asgi.py", "cli.py",
-    "main.ts", "main.tsx", "main.js", "main.jsx", "index.ts", "index.tsx", "index.js", "index.jsx",
-    "server.ts", "server.js", "app.ts", "app.tsx", "app.js", "app.jsx",
+    "main.py",
+    "app.py",
+    "manage.py",
+    "__main__.py",
+    "wsgi.py",
+    "asgi.py",
+    "cli.py",
+    "main.ts",
+    "main.tsx",
+    "main.js",
+    "main.jsx",
+    "index.ts",
+    "index.tsx",
+    "index.js",
+    "index.jsx",
+    "server.ts",
+    "server.js",
+    "app.ts",
+    "app.tsx",
+    "app.js",
+    "app.jsx",
 }
 
 
@@ -200,7 +260,9 @@ def analyze(data: bytes) -> dict:
     return build_structure(tree, sources, extras, truncated)
 
 
-def build_structure(tree: list[str], sources: dict[str, str], extras: dict[str, str], truncated: bool) -> dict:
+def build_structure(
+    tree: list[str], sources: dict[str, str], extras: dict[str, str], truncated: bool
+) -> dict:
     parsed: dict[str, ParsedFile] = {p: parse_file(p, s) for p, s in sources.items()}
     all_paths = set(tree)
     py_index = _PyIndex([p for p in parsed if p.endswith(".py")])
@@ -277,8 +339,14 @@ def build_structure(tree: list[str], sources: dict[str, str], extras: dict[str, 
                 if rid and rid != f"{path}::{s.name}" and rid not in calls:
                     calls.append(rid)
             syms.append(
-                {"id": f"{path}::{s.name}", "name": s.name, "kind": s.kind, "line": s.line,
-                 "summary": s.summary, "calls": calls}
+                {
+                    "id": f"{path}::{s.name}",
+                    "name": s.name,
+                    "kind": s.kind,
+                    "line": s.line,
+                    "summary": s.summary,
+                    "calls": calls,
+                }
             )
         module_calls = []
         for c in pf.module_calls:
@@ -305,7 +373,9 @@ def build_structure(tree: list[str], sources: dict[str, str], extras: dict[str, 
     for f in files_out:
         f["is_entry"] = f["path"] in entry_points
 
-    core = [p for p, by in sorted(imported_by.items(), key=lambda kv: (-len(kv[1]), kv[0])) if len(by) >= 2][:8]
+    core = [p for p, by in sorted(imported_by.items(), key=lambda kv: (-len(kv[1]), kv[0])) if len(by) >= 2][
+        :8
+    ]
     reading_order = _reading_order(entry_points, imports, core)
 
     own_packages = set()
@@ -445,7 +515,11 @@ def _folders(tree: list[str], parsed: dict[str, ParsedFile], extras: dict[str, s
             if not d:
                 break
             d = posixpath.dirname(d)
-    readmes = {posixpath.dirname(p): t for p, t in extras.items() if p.rsplit("/", 1)[-1].lower().startswith("readme")}
+    readmes = {
+        posixpath.dirname(p): t
+        for p, t in extras.items()
+        if p.rsplit("/", 1)[-1].lower().startswith("readme")
+    }
     out = []
     for d in sorted(counts):
         if not d:

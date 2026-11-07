@@ -25,7 +25,13 @@ export function LangDot({ lang }: { lang?: RepoFileInfo["lang"] | undefined }) {
   );
 }
 
-export function Badge({ children, tone = "muted" }: { children: ReactNode; tone?: "muted" | "primary" }) {
+export function Badge({
+  children,
+  tone = "muted",
+}: {
+  children: ReactNode;
+  tone?: "muted" | "primary";
+}) {
   return (
     <span
       className={

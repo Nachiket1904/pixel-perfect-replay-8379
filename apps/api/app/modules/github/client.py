@@ -77,7 +77,8 @@ class GitHubClient:
                     if size > max_bytes:
                         raise GitHubError(
                             "too_large",
-                            f"This repository is too large for the visualizer (over {max_bytes // 1_000_000} MB).",
+                            "This repository is too large for the visualizer "
+                            f"(over {max_bytes // 1_000_000} MB).",
                         )
                     chunks.append(chunk)
         except httpx.HTTPError as e:

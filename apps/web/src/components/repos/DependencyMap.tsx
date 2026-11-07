@@ -44,7 +44,10 @@ function ItemNodeView({ data }: NodeProps<ItemNode>) {
       <Handle type="target" position={Position.Top} style={{ opacity: 0 }} isConnectable={false} />
       <div className="flex items-center gap-1.5">
         {data.kind === "folder" ? <span aria-hidden>📁</span> : <LangDot lang={data.lang} />}
-        <span className={`truncate text-sm font-medium ${data.kind === "file" ? "font-mono" : ""}`} title={data.label}>
+        <span
+          className={`truncate text-sm font-medium ${data.kind === "file" ? "font-mono" : ""}`}
+          title={data.label}
+        >
           {data.label}
         </span>
         {data.isEntry && (
@@ -53,13 +56,21 @@ function ItemNodeView({ data }: NodeProps<ItemNode>) {
           </span>
         )}
         {data.isCore && (
-          <span className={`${data.isEntry ? "" : "ml-auto"} text-xs text-muted-foreground`} title="Core file">
+          <span
+            className={`${data.isEntry ? "" : "ml-auto"} text-xs text-muted-foreground`}
+            title="Core file"
+          >
             ★
           </span>
         )}
       </div>
       <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{data.sublabel}</p>
-      <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} isConnectable={false} />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        style={{ opacity: 0 }}
+        isConnectable={false}
+      />
     </div>
   );
 }
@@ -98,7 +109,14 @@ type Props = {
   onSelectFile: (path: string) => void;
 };
 
-export function DependencyMap({ analysis, index, folder, selectedFile, onOpenFolder, onSelectFile }: Props) {
+export function DependencyMap({
+  analysis,
+  index,
+  folder,
+  selectedFile,
+  onOpenFolder,
+  onSelectFile,
+}: Props) {
   const colorMode = useColorMode();
   const small = analysis.files.length <= SMALL_REPO_FILES;
   const mode: "folders" | "files" = folder === null && !small ? "folders" : "files";
@@ -151,7 +169,11 @@ export function DependencyMap({ analysis, index, folder, selectedFile, onOpenFol
 
   const insideCount = graph.nodes.filter((n) => !n.outside).length;
   const title =
-    mode === "folders" ? "Map of folders" : folder === null ? "All files" : `Files in ${folderLabel(folder)}`;
+    mode === "folders"
+      ? "Map of folders"
+      : folder === null
+        ? "All files"
+        : `Files in ${folderLabel(folder)}`;
 
   return (
     <section className="space-y-2 rounded-lg border p-3" aria-label="Dependency map">

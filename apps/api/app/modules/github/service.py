@@ -3,7 +3,7 @@ import json
 import logging
 import re
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from urllib.parse import urlparse
 
 from fastapi import HTTPException
@@ -64,7 +64,7 @@ def parse_repo_url(raw: str) -> tuple[str, str]:
 
 
 def needs_sync(repo: Repo) -> bool:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     if repo.sync_status in ("pending", "syncing"):
         return repo.updated_at < now - timedelta(minutes=10)  # only if the job looks stuck
     if repo.sync_status == "ok" and repo.last_synced_at:
@@ -111,7 +111,7 @@ async def _store(session: AsyncSession, repo_id: uuid.UUID, meta: dict, sha: str
     stmt = pg_insert(RepoAnalysis).values(repo_id=repo_id, commit_sha=sha, data=structure)
     stmt = stmt.on_conflict_do_update(
         index_elements=[RepoAnalysis.repo_id],
-        set_={"commit_sha": sha, "data": structure, "updated_at": datetime.now(timezone.utc)},
+        set_={"commit_sha": sha, "data": structure, "updated_at": datetime.now(UTC)},
     )
     await session.execute(stmt)
 
@@ -123,7 +123,7 @@ async def _store(session: AsyncSession, repo_id: uuid.UUID, meta: dict, sha: str
     repo.default_branch = meta["default_branch"]
     repo.commit_sha = sha
     repo.sync_status, repo.sync_error = "ok", None
-    repo.last_synced_at = datetime.now(timezone.utc)
+    repo.last_synced_at = datetime.now(UTC)
     await session.commit()
 
 

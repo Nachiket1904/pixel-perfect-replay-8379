@@ -12,7 +12,7 @@ const apiOrigin = process.env["API_ORIGIN"] ?? "http://localhost:8000";
 
 export default defineConfig({
   // nitro: { preset: "node-server" },
-    // Vercel builds need the "vercel" preset; local/Codespaces builds keep node-server.
+  // Vercel builds need the "vercel" preset; local/Codespaces builds keep node-server.
   nitro: {
     preset: process.env["NITRO_PRESET"] ?? (process.env["VERCEL"] ? "vercel" : "node-server"),
   },

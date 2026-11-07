@@ -21,7 +21,14 @@ const KIND_LABEL: Record<RepoSymbol["kind"], string> = {
   component: "component",
 };
 
-export function FilePanel({ repo, file, index, selectedSymbol, onSelectFile, onSelectSymbol }: Props) {
+export function FilePanel({
+  repo,
+  file,
+  index,
+  selectedSymbol,
+  onSelectFile,
+  onSelectSymbol,
+}: Props) {
   const [showCode, setShowCode] = useState(false);
 
   // Jump to another symbol: same file just selects it, another file opens that file.
@@ -50,21 +57,40 @@ export function FilePanel({ repo, file, index, selectedSymbol, onSelectFile, onS
         </div>
         <p className="text-xs text-muted-foreground">
           {LANG_NAMES[file.lang]} · {file.lines} lines ·{" "}
-          <a href={githubUrl} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
+          <a
+            href={githubUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline-offset-4 hover:underline"
+          >
             open on GitHub
           </a>
         </p>
         <p className="pt-1 leading-7">
-          {file.summary ?? <span className="text-muted-foreground">This file has no description comment.</span>}
+          {file.summary ?? (
+            <span className="text-muted-foreground">This file has no description comment.</span>
+          )}
         </p>
         {file.parse_error && (
-          <p className="text-sm text-destructive">This file couldn't be parsed, so its details may be incomplete.</p>
+          <p className="text-sm text-destructive">
+            This file couldn't be parsed, so its details may be incomplete.
+          </p>
         )}
       </header>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <LinkList title="Uses (imports)" empty="Doesn't import other files in this repo." paths={file.imports} onClick={onSelectFile} />
-        <LinkList title="Used by" empty="No other file imports this one." paths={file.imported_by} onClick={onSelectFile} />
+        <LinkList
+          title="Uses (imports)"
+          empty="Doesn't import other files in this repo."
+          paths={file.imports}
+          onClick={onSelectFile}
+        />
+        <LinkList
+          title="Used by"
+          empty="No other file imports this one."
+          paths={file.imported_by}
+          onClick={onSelectFile}
+        />
       </div>
 
       {file.externals.length > 0 && (
@@ -93,7 +119,9 @@ export function FilePanel({ repo, file, index, selectedSymbol, onSelectFile, onS
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h4 className="text-sm font-medium">Functions and classes ({file.symbols.length})</h4>
           {file.lang !== "python" && (
-            <span className="text-xs text-muted-foreground">Call links for JS/TS are best-effort.</span>
+            <span className="text-xs text-muted-foreground">
+              Call links for JS/TS are best-effort.
+            </span>
           )}
         </div>
         {file.symbols.length === 0 ? (
@@ -114,17 +142,35 @@ export function FilePanel({ repo, file, index, selectedSymbol, onSelectFile, onS
                     aria-expanded={open}
                     className={`flex w-full items-baseline gap-2 px-3 py-2 text-left hover:bg-accent ${open ? "bg-accent" : ""}`}
                   >
-                    <span className="w-20 shrink-0 text-xs text-muted-foreground">{KIND_LABEL[s.kind]}</span>
+                    <span className="w-20 shrink-0 text-xs text-muted-foreground">
+                      {KIND_LABEL[s.kind]}
+                    </span>
                     <span className="min-w-0 flex-1">
                       <span className="font-mono text-sm">{s.name}</span>
-                      {s.summary && <span className="block truncate text-xs text-muted-foreground">{s.summary}</span>}
+                      {s.summary && (
+                        <span className="block truncate text-xs text-muted-foreground">
+                          {s.summary}
+                        </span>
+                      )}
                     </span>
                     <span className="shrink-0 text-xs text-muted-foreground">line {s.line}</span>
                   </button>
                   {open && (
                     <div className="grid gap-3 px-3 pb-3 sm:grid-cols-2">
-                      <CallList title="Calls →" empty="Doesn't call other code in this repo." ids={s.calls} label={symbolLabel} onClick={goTo} />
-                      <CallList title="← Called by" empty="Nothing in this repo calls it directly." ids={callers} label={symbolLabel} onClick={goTo} />
+                      <CallList
+                        title="Calls →"
+                        empty="Doesn't call other code in this repo."
+                        ids={s.calls}
+                        label={symbolLabel}
+                        onClick={goTo}
+                      />
+                      <CallList
+                        title="← Called by"
+                        empty="Nothing in this repo calls it directly."
+                        ids={callers}
+                        label={symbolLabel}
+                        onClick={goTo}
+                      />
                     </div>
                   )}
                 </li>
@@ -135,7 +181,12 @@ export function FilePanel({ repo, file, index, selectedSymbol, onSelectFile, onS
       </div>
 
       <div className="space-y-2">
-        <Button variant="outline" size="sm" onClick={() => setShowCode((v) => !v)} aria-expanded={showCode}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowCode((v) => !v)}
+          aria-expanded={showCode}
+        >
           {showCode ? "Hide code" : "Show code"}
         </Button>
         {showCode && <CodeView repoId={repo.id} file={file} selectedSymbol={selectedSymbol} />}
@@ -158,7 +209,8 @@ function LinkList({
   return (
     <div className="min-w-0 space-y-1.5">
       <h4 className="text-sm font-medium">
-        {title} {paths.length > 0 && <span className="text-muted-foreground">({paths.length})</span>}
+        {title}{" "}
+        {paths.length > 0 && <span className="text-muted-foreground">({paths.length})</span>}
       </h4>
       {paths.length === 0 ? (
         <p className="text-sm text-muted-foreground">{empty}</p>
@@ -246,7 +298,10 @@ function CodeView({
   const lines = query.data.content.split("\n");
   return (
     <div className="space-y-1">
-      <div ref={boxRef} className="relative max-h-[520px] overflow-auto rounded-md border bg-muted/40">
+      <div
+        ref={boxRef}
+        className="relative max-h-[520px] overflow-auto rounded-md border bg-muted/40"
+      >
         <pre className="text-xs leading-5">
           <code>
             {lines.map((text, i) => {
@@ -264,7 +319,9 @@ function CodeView({
           </code>
         </pre>
       </div>
-      {query.data.truncated && <p className="text-xs text-muted-foreground">Only the first part of this file is shown.</p>}
+      {query.data.truncated && (
+        <p className="text-xs text-muted-foreground">Only the first part of this file is shown.</p>
+      )}
     </div>
   );
 }

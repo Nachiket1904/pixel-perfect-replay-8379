@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { RepoAnalysis, RepoFileInfo } from "./repos-api";
-import { buildIndex, buildTree, dirOf, fileGraph, folderGraph, layoutLayers, splitSymbolId } from "./repo-structure";
+import {
+  buildIndex,
+  buildTree,
+  dirOf,
+  fileGraph,
+  folderGraph,
+  layoutLayers,
+  splitSymbolId,
+} from "./repo-structure";
 
 const file = (path: string, over: Partial<RepoFileInfo> = {}): RepoFileInfo => ({
   path,
@@ -34,12 +42,30 @@ const analysis: RepoAnalysis = {
   files: [
     file("main.py", {
       imports: ["app/service.py"],
-      symbols: [{ id: "main.py::main", name: "main", kind: "function", line: 1, summary: null, calls: ["app/service.py::run"] }],
+      symbols: [
+        {
+          id: "main.py::main",
+          name: "main",
+          kind: "function",
+          line: 1,
+          summary: null,
+          calls: ["app/service.py::run"],
+        },
+      ],
     }),
     file("app/service.py", {
       imports: ["app/models.py"],
       imported_by: ["main.py", "tests/test_service.py"],
-      symbols: [{ id: "app/service.py::run", name: "run", kind: "function", line: 3, summary: null, calls: [] }],
+      symbols: [
+        {
+          id: "app/service.py::run",
+          name: "run",
+          kind: "function",
+          line: 3,
+          summary: null,
+          calls: [],
+        },
+      ],
     }),
     file("app/models.py", { imported_by: ["app/service.py"] }),
     file("tests/test_service.py", { imports: ["app/service.py"] }),
@@ -59,7 +85,10 @@ describe("buildTree", () => {
   it("puts folders before files", () => {
     const tree = buildTree(analysis.files.map((f) => f.path));
     expect(tree.children.map((c) => c.name)).toEqual(["app", "tests", "main.py"]);
-    expect(tree.children[0]?.children.map((c) => c.path)).toEqual(["app/models.py", "app/service.py"]);
+    expect(tree.children[0]?.children.map((c) => c.path)).toEqual([
+      "app/models.py",
+      "app/service.py",
+    ]);
   });
 });
 
@@ -84,26 +113,36 @@ describe("graphs", () => {
 
 describe("layoutLayers", () => {
   it("puts importers above what they import", () => {
-    const pos = layoutLayers(["a", "b", "c"], [
-      { from: "a", to: "b" },
-      { from: "b", to: "c" },
-    ]);
+    const pos = layoutLayers(
+      ["a", "b", "c"],
+      [
+        { from: "a", to: "b" },
+        { from: "b", to: "c" },
+      ],
+    );
     expect(pos.get("a")!.y).toBeLessThan(pos.get("b")!.y);
     expect(pos.get("b")!.y).toBeLessThan(pos.get("c")!.y);
   });
 
   it("survives import cycles", () => {
-    const pos = layoutLayers(["a", "b"], [
-      { from: "a", to: "b" },
-      { from: "b", to: "a" },
-    ]);
+    const pos = layoutLayers(
+      ["a", "b"],
+      [
+        { from: "a", to: "b" },
+        { from: "b", to: "a" },
+      ],
+    );
     expect(pos.size).toBe(2);
     expect(pos.get("a")!.y).not.toBe(pos.get("b")!.y);
   });
 
   it("wraps wide layers onto more rows", () => {
     const ids = ["root", ...Array.from({ length: 10 }, (_, i) => `n${i}`)];
-    const pos = layoutLayers(ids, ids.slice(1).map((to) => ({ from: "root", to })), { maxPerRow: 4 });
+    const pos = layoutLayers(
+      ids,
+      ids.slice(1).map((to) => ({ from: "root", to })),
+      { maxPerRow: 4 },
+    );
     const rows = new Set(ids.slice(1).map((id) => pos.get(id)!.y));
     expect(rows.size).toBe(3);
   });

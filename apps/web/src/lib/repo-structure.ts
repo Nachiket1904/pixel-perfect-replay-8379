@@ -40,7 +40,14 @@ export function buildIndex(a: RepoAnalysis): RepoIndex {
     for (const s of file.symbols) for (const c of s.calls) addCaller(c, s.id);
     for (const c of file.module_calls) addCaller(c, `${file.path}::(module)`);
   }
-  return { files, folders, symbols, calledBy, core: new Set(a.core_files), entries: new Set(a.entry_points) };
+  return {
+    files,
+    folders,
+    symbols,
+    calledBy,
+    core: new Set(a.core_files),
+    entries: new Set(a.entry_points),
+  };
 }
 
 /** "src/app.py::App.run" -> { file: "src/app.py", name: "App.run" } */
@@ -67,7 +74,9 @@ export function buildTree(codePaths: string[]): TreeNode {
     parts.forEach((part, i) => {
       const isFile = i === parts.length - 1;
       const childPath = parts.slice(0, i + 1).join("/");
-      let child = node.children.find((c) => c.name === part && c.kind === (isFile ? "file" : "folder"));
+      let child = node.children.find(
+        (c) => c.name === part && c.kind === (isFile ? "file" : "folder"),
+      );
       if (!child) {
         child = { name: part, path: childPath, kind: isFile ? "file" : "folder", children: [] };
         node.children.push(child);
@@ -76,7 +85,9 @@ export function buildTree(codePaths: string[]): TreeNode {
     });
   }
   const sort = (n: TreeNode) => {
-    n.children.sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === "folder" ? -1 : 1));
+    n.children.sort((a, b) =>
+      a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === "folder" ? -1 : 1,
+    );
     n.children.forEach(sort);
   };
   sort(root);
@@ -95,7 +106,10 @@ export type GraphNodeData = {
   isCore: boolean;
   outside: boolean; // a neighbour from another folder, shown for context
 };
-export type GraphData = { nodes: GraphNodeData[]; edges: { from: string; to: string; count?: number }[] };
+export type GraphData = {
+  nodes: GraphNodeData[];
+  edges: { from: string; to: string; count?: number }[];
+};
 
 /** One node per folder that directly holds code files; edges are imports between folders. */
 export function folderGraph(a: RepoAnalysis, index: RepoIndex): GraphData {
@@ -121,14 +135,20 @@ export function folderGraph(a: RepoAnalysis, index: RepoIndex): GraphData {
 }
 
 /** Files in one folder (or the whole repo when folder is null) plus their outside neighbours. */
-export function fileGraph(a: RepoAnalysis, index: RepoIndex, folder: string | null, maxOutside = 24): GraphData {
+export function fileGraph(
+  a: RepoAnalysis,
+  index: RepoIndex,
+  folder: string | null,
+  maxOutside = 24,
+): GraphData {
   const inside = a.files.filter((f) => folder === null || dirOf(f.path) === folder);
   const insideSet = new Set(inside.map((f) => f.path));
   const outside: string[] = [];
   if (folder !== null) {
     for (const f of inside) {
       for (const p of [...f.imports, ...f.imported_by]) {
-        if (!insideSet.has(p) && !outside.includes(p) && outside.length < maxOutside) outside.push(p);
+        if (!insideSet.has(p) && !outside.includes(p) && outside.length < maxOutside)
+          outside.push(p);
       }
     }
   }
@@ -150,7 +170,8 @@ export function fileGraph(a: RepoAnalysis, index: RepoIndex, folder: string | nu
   const edges: GraphData["edges"] = [];
   for (const n of nodes) {
     for (const target of index.files.get(n.id)!.imports) {
-      if (ids.has(target) && (!n.outside || insideSet.has(target))) edges.push({ from: n.id, to: target });
+      if (ids.has(target) && (!n.outside || insideSet.has(target)))
+        edges.push({ from: n.id, to: target });
     }
   }
   return { nodes, edges };
@@ -214,8 +235,14 @@ export function layoutLayers(
     if (!layer) continue;
     const order = layer
       .map((id) => {
-        const xs = parents.get(id)!.map((p) => pos.get(p)?.x).filter((x): x is number => x !== undefined);
-        return { id, key: xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : Number.POSITIVE_INFINITY };
+        const xs = parents
+          .get(id)!
+          .map((p) => pos.get(p)?.x)
+          .filter((x): x is number => x !== undefined);
+        return {
+          id,
+          key: xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : Number.POSITIVE_INFINITY,
+        };
       })
       .sort((a, b) => a.key - b.key || a.id.localeCompare(b.id));
     for (let i = 0; i < order.length; i += maxPerRow) {

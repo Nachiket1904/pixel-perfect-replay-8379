@@ -27,8 +27,8 @@ export function RepoOverview({ repo, analysis, onSelectFile }: Props) {
           </a>
         </h2>
         <p className="text-sm text-muted-foreground">
-          {stats.code_files} code files, {stats.lines.toLocaleString()} lines · {languages || "no supported code"} ·{" "}
-          {repo.stars.toLocaleString()} stars
+          {stats.code_files} code files, {stats.lines.toLocaleString()} lines ·{" "}
+          {languages || "no supported code"} · {repo.stars.toLocaleString()} stars
         </p>
         {stats.truncated && (
           <p className="text-xs text-muted-foreground">
@@ -45,14 +45,18 @@ export function RepoOverview({ repo, analysis, onSelectFile }: Props) {
         <div className="space-y-2">
           <h3 className="font-medium">Start here: suggested reading order</h3>
           {analysis.reading_order.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No clear starting point found. Try the folders on the left.</p>
+            <p className="text-sm text-muted-foreground">
+              No clear starting point found. Try the folders on the left.
+            </p>
           ) : (
             <ol className="space-y-1.5 text-sm">
               {analysis.reading_order.map((path, i) => (
                 <li key={path} className="flex items-center gap-2">
                   <span className="w-5 shrink-0 text-right text-muted-foreground">{i + 1}.</span>
                   <FileLink path={path} onClick={onSelectFile} />
-                  {analysis.entry_points.includes(path) && <Badge tone="primary">entry point</Badge>}
+                  {analysis.entry_points.includes(path) && (
+                    <Badge tone="primary">entry point</Badge>
+                  )}
                 </li>
               ))}
             </ol>
@@ -63,7 +67,9 @@ export function RepoOverview({ repo, analysis, onSelectFile }: Props) {
           {analysis.core_files.length > 0 && (
             <div className="space-y-2">
               <h3 className="font-medium">Core files</h3>
-              <p className="text-xs text-muted-foreground">Used by many other files. Understand these and the rest gets easier.</p>
+              <p className="text-xs text-muted-foreground">
+                Used by many other files. Understand these and the rest gets easier.
+              </p>
               <div className="flex flex-wrap gap-1.5">
                 {analysis.core_files.map((path) => (
                   <FileLink key={path} path={path} onClick={onSelectFile} />

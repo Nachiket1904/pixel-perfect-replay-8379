@@ -16,7 +16,14 @@ const ancestors = (path: string) => {
   return parts.slice(0, -1).map((_, i) => parts.slice(0, i + 1).join("/"));
 };
 
-export function FolderTree({ root, index, selectedFile, openFolder, onSelectFile, onOpenFolder }: Props) {
+export function FolderTree({
+  root,
+  index,
+  selectedFile,
+  openFolder,
+  onSelectFile,
+  onOpenFolder,
+}: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(
     () => new Set(root.children.filter((c) => c.kind === "folder").map((c) => c.path)),
   );
@@ -75,7 +82,10 @@ export function FolderTree({ root, index, selectedFile, openFolder, onSelectFile
     const isMapped = openFolder === node.path;
     return (
       <li key={node.path}>
-        <div style={pad} className={`flex items-start gap-1 rounded pr-2 ${isMapped ? "bg-accent/60" : ""}`}>
+        <div
+          style={pad}
+          className={`flex items-start gap-1 rounded pr-2 ${isMapped ? "bg-accent/60" : ""}`}
+        >
           <button
             type="button"
             onClick={() => toggle(node.path)}
@@ -95,7 +105,9 @@ export function FolderTree({ root, index, selectedFile, openFolder, onSelectFile
             title={meta?.summary ?? undefined}
           >
             <span className="block truncate text-sm font-medium">{node.name}/</span>
-            {meta?.role && <span className="block truncate text-xs text-muted-foreground">{meta.role}</span>}
+            {meta?.role && (
+              <span className="block truncate text-xs text-muted-foreground">{meta.role}</span>
+            )}
           </button>
         </div>
         {isOpen && <ul>{node.children.map((c) => renderNode(c, depth + 1))}</ul>}

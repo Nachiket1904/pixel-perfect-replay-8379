@@ -139,10 +139,14 @@ def parse_python(path: str, source: str) -> ParsedFile:
     for node in tree.body:
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             pf.symbols.append(
-                Symbol(node.name, "function", node.lineno, first_sentence(ast.get_docstring(node)), _calls(node))
+                Symbol(
+                    node.name, "function", node.lineno, first_sentence(ast.get_docstring(node)), _calls(node)
+                )
             )
         elif isinstance(node, ast.ClassDef):
-            pf.symbols.append(Symbol(node.name, "class", node.lineno, first_sentence(ast.get_docstring(node))))
+            pf.symbols.append(
+                Symbol(node.name, "class", node.lineno, first_sentence(ast.get_docstring(node)))
+            )
             for item in node.body:
                 if isinstance(item, (ast.FunctionDef, ast.AsyncFunctionDef)):
                     pf.symbols.append(
@@ -190,15 +194,34 @@ _FUNC_EXPR = re.compile(
     r"^(?P<exp>export\s+)?(?:const|let|var)\s+(?P<name>[\w$]+)\s*(?::[^=\n]+)?=\s*(?:async\s+)?function\b",
     re.M,
 )
-_CLASS = re.compile(
-    r"^(?P<exp>export\s+(?:default\s+)?)?(?:abstract\s+)?class\s+(?P<name>[\w$]+)", re.M
-)
+_CLASS = re.compile(r"^(?P<exp>export\s+(?:default\s+)?)?(?:abstract\s+)?class\s+(?P<name>[\w$]+)", re.M)
 _DEFAULT_EXPORT = re.compile(r"^\s*export\s+default\s+(?P<name>[\w$]+)\s*;?\s*$", re.M)
 _CALL = re.compile(r"(?<![\w$.])(?P<name>[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*)?)\s*\(")
 _JSX = re.compile(r"<(?P<name>[A-Z][\w$]*(?:\.[A-Z][\w$]*)?)[\s/>]")
 _KEYWORDS = {
-    "if", "for", "while", "switch", "catch", "function", "return", "typeof", "new", "await", "super",
-    "import", "require", "constructor", "else", "do", "try", "with", "void", "delete", "in", "of", "class",
+    "if",
+    "for",
+    "while",
+    "switch",
+    "catch",
+    "function",
+    "return",
+    "typeof",
+    "new",
+    "await",
+    "super",
+    "import",
+    "require",
+    "constructor",
+    "else",
+    "do",
+    "try",
+    "with",
+    "void",
+    "delete",
+    "in",
+    "of",
+    "class",
 }
 _LEADING_BLOCK = re.compile(r"^\s*(?:['\"]use \w+['\"];?\s*)*/\*\*?(?P<body>.*?)\*/", re.S)
 
@@ -259,7 +282,12 @@ def parse_js(path: str, source: str, lang: str) -> ParsedFile:
                 seen_mods.add(m.group("mod"))
 
     found: dict[str, tuple[int, str, bool]] = {}  # name -> (offset, kind, exported-default)
-    for rx, kind in ((_FUNC_DECL, "function"), (_ARROW, "function"), (_FUNC_EXPR, "function"), (_CLASS, "class")):
+    for rx, kind in (
+        (_FUNC_DECL, "function"),
+        (_ARROW, "function"),
+        (_FUNC_EXPR, "function"),
+        (_CLASS, "class"),
+    ):
         for m in rx.finditer(source):
             name = m.group("name")
             if name in found:

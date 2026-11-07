@@ -45,20 +45,20 @@ PY_MODELS = '''class Order:
         return True
 '''
 
-PY_UTILS = '''import os
+PY_UTILS = """import os
 
 
 def total_price(order):
     return 0
-'''
+"""
 
-TS_MAIN = '''import { createRoot } from "react-dom/client";
+TS_MAIN = """import { createRoot } from "react-dom/client";
 import App from "./App";
 
 createRoot(document.getElementById("root")!).render(<App />);
-'''
+"""
 
-TS_APP = '''/** Top-level layout of the web app. */
+TS_APP = """/** Top-level layout of the web app. */
 import { useState } from "react";
 import { Header } from "@/components/Header";
 import * as api from "./lib/api";
@@ -68,22 +68,22 @@ export default function App() {
   api.loadUser().then(setUser);
   return <Header user={user} />;
 }
-'''
+"""
 
-TS_HEADER = '''export const Header = ({ user }: { user: unknown }) => {
+TS_HEADER = """export const Header = ({ user }: { user: unknown }) => {
   return <nav>{formatName(user)}</nav>;
 };
 
 function formatName(user: unknown): string {
   return String(user);
 }
-'''
+"""
 
-TS_API = '''export async function loadUser() {
+TS_API = """export async function loadUser() {
   const res = await fetch("/api/me");
   return res.json();
 }
-'''
+"""
 
 
 def _tarball(files: dict[str, str]) -> bytes:
@@ -101,13 +101,17 @@ def _analysis():
     return analyze(
         _tarball(
             {
-                "README.md": "# Shop\n\n![badge](x.svg)\n\nA tiny shop used to show how the visualizer works.\n",
+                "README.md": (
+                    "# Shop\n\n![badge](x.svg)\n\nA tiny shop used to show how the visualizer works.\n"
+                ),
                 "shop/__init__.py": "",
                 "shop/main.py": PY_MAIN,
                 "shop/services.py": PY_SERVICES,
                 "shop/models.py": PY_MODELS,
                 "shop/utils.py": PY_UTILS,
-                "tests/test_services.py": "from shop.services import checkout\n\ndef test_x():\n    checkout(None)\n",
+                "tests/test_services.py": (
+                    "from shop.services import checkout\n\ndef test_x():\n    checkout(None)\n"
+                ),
                 "web/package.json": '{"name": "web", "main": "src/main.tsx"}',
                 "web/src/main.tsx": TS_MAIN,
                 "web/src/App.tsx": TS_APP,
@@ -184,7 +188,8 @@ def test_broken_python_file_does_not_break_analysis():
 def test_js_parser_handles_require_and_multiline_imports():
     pf = parse_js(
         "a.js",
-        "const fs = require('fs');\nconst { join } = require('path');\nimport {\n  a,\n  b as c,\n} from './x';\n",
+        "const fs = require('fs');\nconst { join } = require('path');\n"
+        "import {\n  a,\n  b as c,\n} from './x';\n",
         "javascript",
     )
     mods = {i.module: i for i in pf.imports}

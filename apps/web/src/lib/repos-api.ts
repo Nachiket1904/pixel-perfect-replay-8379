@@ -80,7 +80,8 @@ async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
   const body = await res.json().catch(() => null);
   if (!res.ok) {
     if (res.status === 401) throw new Error("Log in to use the repo visualizer.");
-    if (res.status === 502 || res.status === 503) throw new Error("The server is waking up. Try again in a moment.");
+    if (res.status === 502 || res.status === 503)
+      throw new Error("The server is waking up. Try again in a moment.");
     const detail = body?.error?.message ?? (typeof body?.detail === "string" ? body.detail : null);
     throw new Error(detail ?? `Request failed (${res.status})`);
   }

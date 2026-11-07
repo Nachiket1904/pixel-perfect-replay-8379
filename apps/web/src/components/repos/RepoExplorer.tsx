@@ -62,9 +62,13 @@ export function RepoExplorer() {
           Reading the code of {status.data.full_name}. Bigger projects take up to a minute.
         </p>
       )}
-      {status.data?.sync_status === "failed" && <p className="text-sm text-destructive">{status.data.sync_error}</p>}
+      {status.data?.sync_status === "failed" && (
+        <p className="text-sm text-destructive">{status.data.sync_error}</p>
+      )}
       {structure.isError && <p className="text-sm text-destructive">{structure.error.message}</p>}
-      {ready && structure.isPending && <p className="text-sm text-muted-foreground">Loading the map…</p>}
+      {ready && structure.isPending && (
+        <p className="text-sm text-muted-foreground">Loading the map…</p>
+      )}
 
       {structure.data && <Workspace key={structure.data.repo.id} structure={structure.data} />}
     </div>
@@ -141,8 +145,8 @@ function Workspace({ structure }: { structure: RepoStructure }) {
               />
             ) : (
               <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-                Pick a file in the map, the folder list or the reading order to see what it does, what it uses
-                and how its functions call each other.
+                Pick a file in the map, the folder list or the reading order to see what it does,
+                what it uses and how its functions call each other.
               </p>
             )}
           </div>
