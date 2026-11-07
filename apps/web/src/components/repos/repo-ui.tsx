@@ -14,7 +14,7 @@ export const LANG_NAMES: Record<string, string> = {
   javascript: "JavaScript",
 };
 
-export function LangDot({ lang }: { lang?: RepoFileInfo["lang"] }) {
+export function LangDot({ lang }: { lang?: RepoFileInfo["lang"] | undefined }) {
   if (!lang) return null;
   return (
     <span

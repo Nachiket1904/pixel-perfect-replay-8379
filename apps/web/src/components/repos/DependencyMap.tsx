@@ -134,15 +134,17 @@ export function DependencyMap({ analysis, index, folder, selectedFile, onOpenFol
     }));
     const rfEdges: Edge[] = graph.edges.map((e) => {
       const touches = !!focus && (e.from === focus || e.to === focus);
-      return {
+      const edge: Edge = {
         id: `${e.from}->${e.to}`,
         source: e.from,
         target: e.to,
-        label: e.count && e.count > 1 ? String(e.count) : undefined,
         markerEnd: { type: MarkerType.ArrowClosed },
         animated: touches,
-        style: touches ? { strokeWidth: 2 } : focus ? { opacity: 0.25 } : undefined,
       };
+      if (e.count && e.count > 1) edge.label = String(e.count);
+      if (touches) edge.style = { strokeWidth: 2 };
+      else if (focus) edge.style = { opacity: 0.25 };
+      return edge;
     });
     return { nodes: rfNodes, edges: rfEdges };
   }, [graph, focus]);

@@ -59,7 +59,7 @@ describe("buildTree", () => {
   it("puts folders before files", () => {
     const tree = buildTree(analysis.files.map((f) => f.path));
     expect(tree.children.map((c) => c.name)).toEqual(["app", "tests", "main.py"]);
-    expect(tree.children[0].children.map((c) => c.path)).toEqual(["app/models.py", "app/service.py"]);
+    expect(tree.children[0]?.children.map((c) => c.path)).toEqual(["app/models.py", "app/service.py"]);
   });
 });
 
