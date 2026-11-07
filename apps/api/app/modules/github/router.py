@@ -26,7 +26,9 @@ async def analyze_repo(
 
     repo = await session.scalar(select(Repo).where(Repo.owner == owner, Repo.name == name))
     if repo is not None and not service.needs_sync(repo):
-        return repo  # fresh or already running: no GitHub calls, no rate-limit charge
+        has_result = repo.sync_status != "ok" or await session.get(RepoAnalysis, repo.id) is not None
+        if has_result:
+            return repo  # fresh or already running: no GitHub calls, no rate-limit charge
 
     await service.check_analyze_limit(user.id)
     if repo is None:
