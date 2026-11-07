@@ -1,0 +1,1389 @@
+diff --git a/apps/web/src/components/repos/DependencyMap.tsx b/apps/web/src/components/repos/DependencyMap.tsx
+new file mode 100644
+index 0000000..2ad23de
+--- /dev/null
++++ b/apps/web/src/components/repos/DependencyMap.tsx
+@@ -0,0 +1,200 @@
++import { useEffect, useMemo, useState } from "react";
++import {
++  Background,
++  Controls,
++  Handle,
++  MarkerType,
++  Position,
++  ReactFlow,
++  type Edge,
++  type Node,
++  type NodeProps,
++} from "@xyflow/react";
++import "@xyflow/react/dist/style.css";
++import { Button } from "@/components/ui/button";
++import type { RepoAnalysis } from "@/lib/repos-api";
++import {
++  type GraphData,
++  type GraphNodeData,
++  type RepoIndex,
++  dirOf,
++  fileGraph,
++  folderGraph,
++  folderLabel,
++  layoutLayers,
++} from "@/lib/repo-structure";
++import { LangDot } from "./repo-ui";
++
++/** Repos up to this many code files show every file at once instead of a folder map. */
++export const SMALL_REPO_FILES = 40;
++
++type ItemData = GraphNodeData & { highlight: boolean; dimmed: boolean };
++type ItemNode = Node<ItemData, "item">;
++
++function ItemNodeView({ data }: NodeProps<ItemNode>) {
++  return (
++    <div
++      className={[
++        "w-[220px] rounded-lg border bg-card px-3 py-2 text-card-foreground shadow-sm transition-opacity",
++        data.highlight ? "border-primary ring-2 ring-primary/40" : "",
++        data.outside ? "border-dashed" : "",
++        data.dimmed ? "opacity-35" : "",
++      ].join(" ")}
++    >
++      <Handle type="target" position={Position.Top} style={{ opacity: 0 }} isConnectable={false} />
++      <div className="flex items-center gap-1.5">
++        {data.kind === "folder" ? <span aria-hidden>📁</span> : <LangDot lang={data.lang} />}
++        <span className={`truncate text-sm font-medium ${data.kind === "file" ? "font-mono" : ""}`} title={data.label}>
++          {data.label}
++        </span>
++        {data.isEntry && (
++          <span className="ml-auto text-xs text-primary" title="Entry point">
++            ▶
++          </span>
++        )}
++        {data.isCore && (
++          <span className={`${data.isEntry ? "" : "ml-auto"} text-xs text-muted-foreground`} title="Core file">
++            ★
++          </span>
++        )}
++      </div>
++      <p className="mt-0.5 line-clamp-2 text-xs text-muted-foreground">{data.sublabel}</p>
++      <Handle type="source" position={Position.Bottom} style={{ opacity: 0 }} isConnectable={false} />
++    </div>
++  );
++}
++
++const nodeTypes = { item: ItemNodeView };
++
++/** Follows the app's light/dark theme (class on <html>), falling back to the OS setting. */
++function useColorMode(): "light" | "dark" {
++  const [mode, setMode] = useState<"light" | "dark">("light");
++  useEffect(() => {
++    const el = document.documentElement;
++    const media = window.matchMedia("(prefers-color-scheme: dark)");
++    const read = () => {
++      if (el.classList.contains("dark")) setMode("dark");
++      else if (el.classList.contains("light")) setMode("light");
++      else setMode(media.matches ? "dark" : "light");
++    };
++    read();
++    const observer = new MutationObserver(read);
++    observer.observe(el, { attributes: true, attributeFilter: ["class"] });
++    media.addEventListener("change", read);
++    return () => {
++      observer.disconnect();
++      media.removeEventListener("change", read);
++    };
++  }, []);
++  return mode;
++}
++
++type Props = {
++  analysis: RepoAnalysis;
++  index: RepoIndex;
++  folder: string | null; // null = overview map
++  selectedFile: string | null;
++  onOpenFolder: (folder: string | null) => void;
++  onSelectFile: (path: string) => void;
++};
++
++export function DependencyMap({ analysis, index, folder, selectedFile, onOpenFolder, onSelectFile }: Props) {
++  const colorMode = useColorMode();
++  const small = analysis.files.length <= SMALL_REPO_FILES;
++  const mode: "folders" | "files" = folder === null && !small ? "folders" : "files";
++
++  const graph: GraphData = useMemo(
++    () => (mode === "folders" ? folderGraph(analysis, index) : fileGraph(analysis, index, folder)),
++    [analysis, index, mode, folder],
++  );
++
++  const focus = mode === "folders" ? (selectedFile ? dirOf(selectedFile) : null) : selectedFile;
++
++  const { nodes, edges } = useMemo(() => {
++    const positions = layoutLayers(
++      graph.nodes.map((n) => n.id),
++      graph.edges,
++    );
++    const neighbours = new Set<string>();
++    if (focus) {
++      for (const e of graph.edges) {
++        if (e.from === focus) neighbours.add(e.to);
++        if (e.to === focus) neighbours.add(e.from);
++      }
++    }
++    const rfNodes: ItemNode[] = graph.nodes.map((n) => ({
++      id: n.id,
++      type: "item",
++      position: positions.get(n.id) ?? { x: 0, y: 0 },
++      data: {
++        ...n,
++        highlight: n.id === focus,
++        dimmed: !!focus && n.id !== focus && !neighbours.has(n.id),
++      },
++    }));
++    const rfEdges: Edge[] = graph.edges.map((e) => {
++      const touches = !!focus && (e.from === focus || e.to === focus);
++      return {
++        id: `${e.from}->${e.to}`,
++        source: e.from,
++        target: e.to,
++        label: e.count && e.count > 1 ? String(e.count) : undefined,
++        markerEnd: { type: MarkerType.ArrowClosed },
++        animated: touches,
++        style: touches ? { strokeWidth: 2 } : focus ? { opacity: 0.25 } : undefined,
++      };
++    });
++    return { nodes: rfNodes, edges: rfEdges };
++  }, [graph, focus]);
++
++  const insideCount = graph.nodes.filter((n) => !n.outside).length;
++  const title =
++    mode === "folders" ? "Map of folders" : folder === null ? "All files" : `Files in ${folderLabel(folder)}`;
++
++  return (
++    <section className="space-y-2 rounded-lg border p-3" aria-label="Dependency map">
++      <div className="flex flex-wrap items-center gap-2">
++        <h3 className="font-medium">{title}</h3>
++        {mode === "files" && folder !== null && !small && (
++          <Button variant="outline" size="sm" onClick={() => onOpenFolder(null)}>
++            ← All folders
++          </Button>
++        )}
++        <p className="w-full text-xs text-muted-foreground">
++          {mode === "folders"
++            ? "Each box is a folder; arrows point to the folders it uses. Click a folder to see its files."
++            : "Arrows point from a file to the files it imports. Dashed boxes live in other folders. Click a file to explore it."}
++        </p>
++      </div>
++
++      {insideCount === 0 ? (
++        <p className="py-10 text-center text-sm text-muted-foreground">
++          No code files directly in this folder. Pick one of its subfolders on the left.
++        </p>
++      ) : (
++        <div className="h-[480px] overflow-hidden rounded-md border">
++          <ReactFlow
++            key={`${mode}:${folder ?? ""}`}
++            nodes={nodes}
++            edges={edges}
++            nodeTypes={nodeTypes}
++            colorMode={colorMode}
++            onNodeClick={(_, node) => {
++              if (mode === "folders") onOpenFolder(node.id);
++              else onSelectFile(node.id);
++            }}
++            nodesDraggable={false}
++            nodesConnectable={false}
++            elementsSelectable={false}
++            fitView
++            fitViewOptions={{ padding: 0.15, maxZoom: 1.2 }}
++            minZoom={0.1}
++          >
++            <Background />
++            <Controls showInteractive={false} />
++          </ReactFlow>
++        </div>
++      )}
++    </section>
++  );
++}
+diff --git a/apps/web/src/components/repos/FilePanel.tsx b/apps/web/src/components/repos/FilePanel.tsx
+new file mode 100644
+index 0000000..7888e55
+--- /dev/null
++++ b/apps/web/src/components/repos/FilePanel.tsx
+@@ -0,0 +1,270 @@
++import { useEffect, useRef, useState } from "react";
++import { useQuery } from "@tanstack/react-query";
++import { Button } from "@/components/ui/button";
++import { getRepoFile, type RepoFileInfo, type RepoSummary, type RepoSymbol } from "@/lib/repos-api";
++import { type RepoIndex, baseName, splitSymbolId } from "@/lib/repo-structure";
++import { Badge, FileLink, LANG_NAMES } from "./repo-ui";
++
++type Props = {
++  repo: RepoSummary;
++  file: RepoFileInfo;
++  index: RepoIndex;
++  selectedSymbol: string | null;
++  onSelectFile: (path: string, symbolId?: string | null) => void;
++  onSelectSymbol: (id: string | null) => void;
++};
++
++const KIND_LABEL: Record<RepoSymbol["kind"], string> = {
++  function: "function",
++  method: "method",
++  class: "class",
++  component: "component",
++};
++
++export function FilePanel({ repo, file, index, selectedSymbol, onSelectFile, onSelectSymbol }: Props) {
++  const [showCode, setShowCode] = useState(false);
++
++  // Jump to another symbol: same file just selects it, another file opens that file.
++  const goTo = (id: string) => {
++    const { file: path } = splitSymbolId(id);
++    if (path === file.path) onSelectSymbol(id);
++    else if (index.files.has(path)) onSelectFile(path, id.endsWith("::(module)") ? null : id);
++    setShowCode(true);
++  };
++
++  const symbolLabel = (id: string) => {
++    const { file: path, name } = splitSymbolId(id);
++    if (name === "(module)") return `${baseName(path)} (top level)`;
++    return path === file.path ? name : `${name} · ${baseName(path)}`;
++  };
++
++  const githubUrl = `https://github.com/${repo.full_name}/blob/${repo.commit_sha ?? repo.default_branch ?? "HEAD"}/${file.path}`;
++
++  return (
++    <section className="space-y-5 rounded-lg border p-4" aria-label={`File ${file.path}`}>
++      <header className="space-y-1">
++        <div className="flex flex-wrap items-center gap-2">
++          <h3 className="break-all font-mono text-base font-semibold">{file.path}</h3>
++          {index.entries.has(file.path) && <Badge tone="primary">entry point</Badge>}
++          {index.core.has(file.path) && <Badge>core file</Badge>}
++        </div>
++        <p className="text-xs text-muted-foreground">
++          {LANG_NAMES[file.lang]} · {file.lines} lines ·{" "}
++          <a href={githubUrl} target="_blank" rel="noopener noreferrer" className="underline-offset-4 hover:underline">
++            open on GitHub
++          </a>
++        </p>
++        <p className="pt-1 leading-7">
++          {file.summary ?? <span className="text-muted-foreground">This file has no description comment.</span>}
++        </p>
++        {file.parse_error && (
++          <p className="text-sm text-destructive">This file couldn't be parsed, so its details may be incomplete.</p>
++        )}
++      </header>
++
++      <div className="grid gap-4 md:grid-cols-2">
++        <LinkList title="Uses (imports)" empty="Doesn't import other files in this repo." paths={file.imports} onClick={onSelectFile} />
++        <LinkList title="Used by" empty="No other file imports this one." paths={file.imported_by} onClick={onSelectFile} />
++      </div>
++
++      {file.externals.length > 0 && (
++        <div className="space-y-1.5">
++          <h4 className="text-sm font-medium">Libraries it uses</h4>
++          <div className="flex flex-wrap gap-1.5">
++            {file.externals.map((lib) => (
++              <Badge key={lib}>{lib}</Badge>
++            ))}
++          </div>
++        </div>
++      )}
++
++      {file.module_calls.length > 0 && (
++        <div className="space-y-1.5">
++          <h4 className="text-sm font-medium">When this file runs, it calls</h4>
++          <div className="flex flex-wrap gap-1.5">
++            {file.module_calls.map((id) => (
++              <CallButton key={id} label={symbolLabel(id)} onClick={() => goTo(id)} />
++            ))}
++          </div>
++        </div>
++      )}
++
++      <div className="space-y-2">
++        <div className="flex flex-wrap items-baseline justify-between gap-2">
++          <h4 className="text-sm font-medium">Functions and classes ({file.symbols.length})</h4>
++          {file.lang !== "python" && (
++            <span className="text-xs text-muted-foreground">Call links for JS/TS are best-effort.</span>
++          )}
++        </div>
++        {file.symbols.length === 0 ? (
++          <p className="text-sm text-muted-foreground">No top-level functions or classes found.</p>
++        ) : (
++          <ul className="divide-y rounded-md border">
++            {file.symbols.map((s) => {
++              const open = s.id === selectedSymbol;
++              const callers = index.calledBy.get(s.id) ?? [];
++              return (
++                <li key={s.id}>
++                  <button
++                    type="button"
++                    onClick={() => {
++                      onSelectSymbol(open ? null : s.id);
++                      if (!open) setShowCode(true);
++                    }}
++                    aria-expanded={open}
++                    className={`flex w-full items-baseline gap-2 px-3 py-2 text-left hover:bg-accent ${open ? "bg-accent" : ""}`}
++                  >
++                    <span className="w-20 shrink-0 text-xs text-muted-foreground">{KIND_LABEL[s.kind]}</span>
++                    <span className="min-w-0 flex-1">
++                      <span className="font-mono text-sm">{s.name}</span>
++                      {s.summary && <span className="block truncate text-xs text-muted-foreground">{s.summary}</span>}
++                    </span>
++                    <span className="shrink-0 text-xs text-muted-foreground">line {s.line}</span>
++                  </button>
++                  {open && (
++                    <div className="grid gap-3 px-3 pb-3 sm:grid-cols-2">
++                      <CallList title="Calls →" empty="Doesn't call other code in this repo." ids={s.calls} label={symbolLabel} onClick={goTo} />
++                      <CallList title="← Called by" empty="Nothing in this repo calls it directly." ids={callers} label={symbolLabel} onClick={goTo} />
++                    </div>
++                  )}
++                </li>
++              );
++            })}
++          </ul>
++        )}
++      </div>
++
++      <div className="space-y-2">
++        <Button variant="outline" size="sm" onClick={() => setShowCode((v) => !v)} aria-expanded={showCode}>
++          {showCode ? "Hide code" : "Show code"}
++        </Button>
++        {showCode && <CodeView repoId={repo.id} file={file} selectedSymbol={selectedSymbol} />}
++      </div>
++    </section>
++  );
++}
++
++function LinkList({
++  title,
++  empty,
++  paths,
++  onClick,
++}: {
++  title: string;
++  empty: string;
++  paths: string[];
++  onClick: (path: string) => void;
++}) {
++  return (
++    <div className="min-w-0 space-y-1.5">
++      <h4 className="text-sm font-medium">
++        {title} {paths.length > 0 && <span className="text-muted-foreground">({paths.length})</span>}
++      </h4>
++      {paths.length === 0 ? (
++        <p className="text-sm text-muted-foreground">{empty}</p>
++      ) : (
++        <div className="flex max-h-40 flex-wrap gap-1.5 overflow-auto">
++          {paths.map((p) => (
++            <FileLink key={p} path={p} onClick={onClick} />
++          ))}
++        </div>
++      )}
++    </div>
++  );
++}
++
++function CallButton({ label, onClick }: { label: string; onClick: () => void }) {
++  return (
++    <button
++      type="button"
++      onClick={onClick}
++      className="max-w-full truncate rounded-md border px-2 py-0.5 text-left font-mono text-xs hover:bg-accent"
++      title={label}
++    >
++      {label}
++    </button>
++  );
++}
++
++function CallList({
++  title,
++  empty,
++  ids,
++  label,
++  onClick,
++}: {
++  title: string;
++  empty: string;
++  ids: string[];
++  label: (id: string) => string;
++  onClick: (id: string) => void;
++}) {
++  return (
++    <div className="min-w-0 space-y-1">
++      <p className="text-xs font-medium">{title}</p>
++      {ids.length === 0 ? (
++        <p className="text-xs text-muted-foreground">{empty}</p>
++      ) : (
++        <div className="flex flex-wrap gap-1.5">
++          {ids.map((id) => (
++            <CallButton key={id} label={label(id)} onClick={() => onClick(id)} />
++          ))}
++        </div>
++      )}
++    </div>
++  );
++}
++
++function CodeView({
++  repoId,
++  file,
++  selectedSymbol,
++}: {
++  repoId: string;
++  file: RepoFileInfo;
++  selectedSymbol: string | null;
++}) {
++  const query = useQuery({
++    queryKey: ["repo-file", repoId, file.path],
++    queryFn: () => getRepoFile(repoId, file.path),
++    staleTime: 60 * 60 * 1000,
++  });
++  const boxRef = useRef<HTMLDivElement>(null);
++  const symbol = file.symbols.find((s) => s.id === selectedSymbol);
++
++  // Scroll the code box (not the page) to the selected function.
++  useEffect(() => {
++    const box = boxRef.current;
++    if (!box || !symbol || !query.data) return;
++    const line = box.querySelector<HTMLElement>(`[data-line="${symbol.line}"]`);
++    if (line) box.scrollTop = line.offsetTop - box.clientHeight / 3;
++  }, [symbol, query.data]);
++
++  if (query.isPending) return <p className="text-sm text-muted-foreground">Loading code…</p>;
++  if (query.isError) return <p className="text-sm text-destructive">{query.error.message}</p>;
++
++  const lines = query.data.content.split("\n");
++  return (
++    <div className="space-y-1">
++      <div ref={boxRef} className="relative max-h-[520px] overflow-auto rounded-md border bg-muted/40">
++        <pre className="text-xs leading-5">
++          <code>
++            {lines.map((text, i) => {
++              const n = i + 1;
++              const hit = symbol?.line === n;
++              return (
++                <div key={n} data-line={n} className={`flex ${hit ? "bg-primary/15" : ""}`}>
++                  <span className="sticky left-0 w-12 shrink-0 select-none bg-muted/80 pr-3 text-right text-muted-foreground">
++                    {n}
++                  </span>
++                  <span className="whitespace-pre pl-3 pr-4">{text || " "}</span>
++                </div>
++              );
++            })}
++          </code>
++        </pre>
++      </div>
++      {query.data.truncated && <p className="text-xs text-muted-foreground">Only the first part of this file is shown.</p>}
++    </div>
++  );
++}
+diff --git a/apps/web/src/components/repos/FolderTree.tsx b/apps/web/src/components/repos/FolderTree.tsx
+new file mode 100644
+index 0000000..1f22a0b
+--- /dev/null
++++ b/apps/web/src/components/repos/FolderTree.tsx
+@@ -0,0 +1,122 @@
++import { useEffect, useState } from "react";
++import type { RepoIndex, TreeNode } from "@/lib/repo-structure";
++import { LangDot } from "./repo-ui";
++
++type Props = {
++  root: TreeNode;
++  index: RepoIndex;
++  selectedFile: string | null;
++  openFolder: string | null;
++  onSelectFile: (path: string) => void;
++  onOpenFolder: (folder: string | null) => void; // null = map of all folders
++};
++
++const ancestors = (path: string) => {
++  const parts = path.split("/");
++  return parts.slice(0, -1).map((_, i) => parts.slice(0, i + 1).join("/"));
++};
++
++export function FolderTree({ root, index, selectedFile, openFolder, onSelectFile, onOpenFolder }: Props) {
++  const [expanded, setExpanded] = useState<Set<string>>(
++    () => new Set(root.children.filter((c) => c.kind === "folder").map((c) => c.path)),
++  );
++
++  // Reveal the selected file in the tree.
++  useEffect(() => {
++    if (!selectedFile) return;
++    setExpanded((prev) => {
++      const next = new Set(prev);
++      ancestors(selectedFile).forEach((a) => next.add(a));
++      return next;
++    });
++  }, [selectedFile]);
++
++  const toggle = (path: string) =>
++    setExpanded((prev) => {
++      const next = new Set(prev);
++      if (next.has(path)) next.delete(path);
++      else next.add(path);
++      return next;
++    });
++
++  function renderNode(node: TreeNode, depth: number) {
++    const pad = { paddingLeft: `${depth * 12 + 4}px` };
++    if (node.kind === "file") {
++      const isSelected = node.path === selectedFile;
++      return (
++        <li key={node.path}>
++          <button
++            type="button"
++            onClick={() => onSelectFile(node.path)}
++            style={pad}
++            className={`flex w-full items-center gap-1.5 rounded py-1 pr-2 text-left text-sm hover:bg-accent ${
++              isSelected ? "bg-accent font-medium" : ""
++            }`}
++            aria-current={isSelected ? "true" : undefined}
++          >
++            <LangDot lang={index.files.get(node.path)?.lang} />
++            <span className="truncate">{node.name}</span>
++            {index.entries.has(node.path) && (
++              <span className="text-xs text-primary" title="Entry point">
++                ▶
++              </span>
++            )}
++            {index.core.has(node.path) && (
++              <span className="text-xs text-muted-foreground" title="Core file">
++                ★
++              </span>
++            )}
++          </button>
++        </li>
++      );
++    }
++    const isOpen = expanded.has(node.path);
++    const meta = index.folders.get(node.path);
++    const isMapped = openFolder === node.path;
++    return (
++      <li key={node.path}>
++        <div style={pad} className={`flex items-start gap-1 rounded pr-2 ${isMapped ? "bg-accent/60" : ""}`}>
++          <button
++            type="button"
++            onClick={() => toggle(node.path)}
++            aria-expanded={isOpen}
++            aria-label={`${isOpen ? "Collapse" : "Expand"} ${node.name}`}
++            className="mt-1 w-4 shrink-0 text-xs text-muted-foreground"
++          >
++            {isOpen ? "▾" : "▸"}
++          </button>
++          <button
++            type="button"
++            onClick={() => {
++              onOpenFolder(node.path);
++              if (!isOpen) toggle(node.path);
++            }}
++            className="min-w-0 flex-1 py-1 text-left hover:underline"
++            title={meta?.summary ?? undefined}
++          >
++            <span className="block truncate text-sm font-medium">{node.name}/</span>
++            {meta?.role && <span className="block truncate text-xs text-muted-foreground">{meta.role}</span>}
++          </button>
++        </div>
++        {isOpen && <ul>{node.children.map((c) => renderNode(c, depth + 1))}</ul>}
++      </li>
++    );
++  }
++
++  return (
++    <nav aria-label="Folders and files" className="rounded-lg border p-2">
++      <div className="flex items-center justify-between px-1 pb-2">
++        <h3 className="text-sm font-medium">Folders</h3>
++        <button
++          type="button"
++          className="text-xs text-muted-foreground hover:underline"
++          onClick={() => onOpenFolder(null)}
++        >
++          map of all folders
++        </button>
++      </div>
++      <ul className="max-h-[70vh] overflow-auto">{root.children.map((c) => renderNode(c, 0))}</ul>
++      <p className="px-1 pt-2 text-xs text-muted-foreground">▶ entry point · ★ core file</p>
++    </nav>
++  );
++}
+diff --git a/apps/web/src/components/repos/RepoExplorer.tsx b/apps/web/src/components/repos/RepoExplorer.tsx
+new file mode 100644
+index 0000000..716169e
+--- /dev/null
++++ b/apps/web/src/components/repos/RepoExplorer.tsx
+@@ -0,0 +1,153 @@
++import { useMemo, useRef, useState, type FormEvent } from "react";
++import { useMutation, useQuery } from "@tanstack/react-query";
++import { Button } from "@/components/ui/button";
++import { Input } from "@/components/ui/input";
++import { analyzeRepo, getRepo, getRepoStructure, type RepoStructure } from "@/lib/repos-api";
++import { buildIndex, buildTree, dirOf } from "@/lib/repo-structure";
++import { DependencyMap, SMALL_REPO_FILES } from "./DependencyMap";
++import { FilePanel } from "./FilePanel";
++import { FolderTree } from "./FolderTree";
++import { RepoOverview } from "./RepoOverview";
++
++const BUSY = new Set(["pending", "syncing"]);
++
++export function RepoExplorer() {
++  const [url, setUrl] = useState("");
++  const [repoId, setRepoId] = useState<string | null>(null);
++
++  const analyze = useMutation({ mutationFn: analyzeRepo, onSuccess: (repo) => setRepoId(repo.id) });
++
++  const status = useQuery({
++    queryKey: ["repo", repoId],
++    queryFn: () => getRepo(repoId!),
++    enabled: !!repoId,
++    refetchInterval: (q) => (q.state.data && BUSY.has(q.state.data.sync_status) ? 2000 : false),
++  });
++
++  const ready = status.data?.sync_status === "ok";
++  const structure = useQuery({
++    queryKey: ["repo-structure", repoId, status.data?.commit_sha],
++    queryFn: () => getRepoStructure(repoId!),
++    enabled: !!repoId && ready,
++    staleTime: 10 * 60 * 1000,
++  });
++
++  const busy = analyze.isPending || (!!status.data && BUSY.has(status.data.sync_status));
++
++  function onSubmit(e: FormEvent) {
++    e.preventDefault();
++    if (url.trim()) analyze.mutate(url.trim());
++  }
++
++  return (
++    <div className="space-y-6">
++      <form onSubmit={onSubmit} className="flex flex-col gap-2 sm:flex-row">
++        <Input
++          value={url}
++          onChange={(e) => setUrl(e.target.value)}
++          placeholder="https://github.com/owner/repo"
++          aria-label="GitHub repository URL"
++        />
++        <Button type="submit" disabled={busy}>
++          {busy ? "Analyzing…" : "Explore repository"}
++        </Button>
++      </form>
++      <p className="text-xs text-muted-foreground">
++        Works with public repositories. Python, JavaScript and TypeScript code is analyzed.
++      </p>
++
++      {analyze.isError && <p className="text-sm text-destructive">{analyze.error.message}</p>}
++      {status.data && BUSY.has(status.data.sync_status) && (
++        <p className="text-sm text-muted-foreground" aria-live="polite">
++          Reading the code of {status.data.full_name}. Bigger projects take up to a minute.
++        </p>
++      )}
++      {status.data?.sync_status === "failed" && <p className="text-sm text-destructive">{status.data.sync_error}</p>}
++      {structure.isError && <p className="text-sm text-destructive">{structure.error.message}</p>}
++      {ready && structure.isPending && <p className="text-sm text-muted-foreground">Loading the map…</p>}
++
++      {structure.data && <Workspace key={structure.data.repo.id} structure={structure.data} />}
++    </div>
++  );
++}
++
++function Workspace({ structure }: { structure: RepoStructure }) {
++  const { repo, analysis } = structure;
++  const index = useMemo(() => buildIndex(analysis), [analysis]);
++  const tree = useMemo(() => buildTree(analysis.files.map((f) => f.path)), [analysis]);
++  const small = analysis.files.length <= SMALL_REPO_FILES;
++
++  const [folder, setFolder] = useState<string | null>(null);
++  const [selectedFile, setSelectedFile] = useState<string | null>(null);
++  const [selectedSymbol, setSelectedSymbol] = useState<string | null>(null);
++  const panelRef = useRef<HTMLDivElement>(null);
++
++  function selectFile(path: string, symbolId: string | null = null) {
++    setSelectedFile(path);
++    setSelectedSymbol(symbolId);
++    if (!small) setFolder(dirOf(path));
++    // Bring the file panel into view if it's below the fold.
++    requestAnimationFrame(() => {
++      const el = panelRef.current;
++      if (el && el.getBoundingClientRect().top > window.innerHeight * 0.75) {
++        el.scrollIntoView({ behavior: "smooth", block: "start" });
++      }
++    });
++  }
++
++  if (analysis.files.length === 0) {
++    return (
++      <div className="space-y-4">
++        <RepoOverview repo={repo} analysis={analysis} onSelectFile={selectFile} />
++        <p className="text-sm text-muted-foreground">
++          No Python, JavaScript or TypeScript files were found in this repository.
++        </p>
++      </div>
++    );
++  }
++
++  const file = selectedFile ? index.files.get(selectedFile) : undefined;
++
++  return (
++    <div className="space-y-6">
++      <RepoOverview repo={repo} analysis={analysis} onSelectFile={selectFile} />
++      <div className="grid gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
++        <FolderTree
++          root={tree}
++          index={index}
++          selectedFile={selectedFile}
++          openFolder={folder}
++          onSelectFile={selectFile}
++          onOpenFolder={setFolder}
++        />
++        <div className="min-w-0 space-y-4">
++          <DependencyMap
++            analysis={analysis}
++            index={index}
++            folder={folder}
++            selectedFile={selectedFile}
++            onOpenFolder={setFolder}
++            onSelectFile={selectFile}
++          />
++          <div ref={panelRef} className="scroll-mt-4">
++            {file ? (
++              <FilePanel
++                repo={repo}
++                file={file}
++                index={index}
++                selectedSymbol={selectedSymbol}
++                onSelectFile={selectFile}
++                onSelectSymbol={setSelectedSymbol}
++              />
++            ) : (
++              <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
++                Pick a file in the map, the folder list or the reading order to see what it does, what it uses
++                and how its functions call each other.
++              </p>
++            )}
++          </div>
++        </div>
++      </div>
++    </div>
++  );
++}
+diff --git a/apps/web/src/components/repos/RepoOverview.tsx b/apps/web/src/components/repos/RepoOverview.tsx
+new file mode 100644
+index 0000000..c364e46
+--- /dev/null
++++ b/apps/web/src/components/repos/RepoOverview.tsx
+@@ -0,0 +1,90 @@
++import type { RepoAnalysis, RepoSummary } from "@/lib/repos-api";
++import { Badge, FileLink, LANG_NAMES } from "./repo-ui";
++
++type Props = {
++  repo: RepoSummary;
++  analysis: RepoAnalysis;
++  onSelectFile: (path: string) => void;
++};
++
++export function RepoOverview({ repo, analysis, onSelectFile }: Props) {
++  const { stats } = analysis;
++  const languages = Object.entries(stats.languages)
++    .map(([lang, n]) => `${LANG_NAMES[lang] ?? lang} (${n})`)
++    .join(", ");
++
++  return (
++    <section className="space-y-5 rounded-lg border p-5" aria-label="Repository overview">
++      <div className="space-y-1">
++        <h2 className="text-xl font-semibold">
++          <a
++            href={`https://github.com/${repo.full_name}`}
++            target="_blank"
++            rel="noopener noreferrer"
++            className="underline-offset-4 hover:underline"
++          >
++            {repo.full_name}
++          </a>
++        </h2>
++        <p className="text-sm text-muted-foreground">
++          {stats.code_files} code files, {stats.lines.toLocaleString()} lines · {languages || "no supported code"} ·{" "}
++          {repo.stars.toLocaleString()} stars
++        </p>
++        {stats.truncated && (
++          <p className="text-xs text-muted-foreground">
++            This repository is large, so only part of it was analyzed.
++          </p>
++        )}
++      </div>
++
++      {(analysis.readme || repo.description) && (
++        <p className="max-w-3xl leading-7">{analysis.readme ?? repo.description}</p>
++      )}
++
++      <div className="grid gap-5 md:grid-cols-2">
++        <div className="space-y-2">
++          <h3 className="font-medium">Start here: suggested reading order</h3>
++          {analysis.reading_order.length === 0 ? (
++            <p className="text-sm text-muted-foreground">No clear starting point found. Try the folders on the left.</p>
++          ) : (
++            <ol className="space-y-1.5 text-sm">
++              {analysis.reading_order.map((path, i) => (
++                <li key={path} className="flex items-center gap-2">
++                  <span className="w-5 shrink-0 text-right text-muted-foreground">{i + 1}.</span>
++                  <FileLink path={path} onClick={onSelectFile} />
++                  {analysis.entry_points.includes(path) && <Badge tone="primary">entry point</Badge>}
++                </li>
++              ))}
++            </ol>
++          )}
++        </div>
++
++        <div className="space-y-4">
++          {analysis.core_files.length > 0 && (
++            <div className="space-y-2">
++              <h3 className="font-medium">Core files</h3>
++              <p className="text-xs text-muted-foreground">Used by many other files. Understand these and the rest gets easier.</p>
++              <div className="flex flex-wrap gap-1.5">
++                {analysis.core_files.map((path) => (
++                  <FileLink key={path} path={path} onClick={onSelectFile} />
++                ))}
++              </div>
++            </div>
++          )}
++          {analysis.libraries.length > 0 && (
++            <div className="space-y-2">
++              <h3 className="font-medium">Main libraries</h3>
++              <div className="flex flex-wrap gap-1.5">
++                {analysis.libraries.map((lib) => (
++                  <Badge key={lib.name}>
++                    {lib.name} · {lib.files}
++                  </Badge>
++                ))}
++              </div>
++            </div>
++          )}
++        </div>
++      </div>
++    </section>
++  );
++}
+diff --git a/apps/web/src/components/repos/repo-ui.tsx b/apps/web/src/components/repos/repo-ui.tsx
+new file mode 100644
+index 0000000..4e654cc
+--- /dev/null
++++ b/apps/web/src/components/repos/repo-ui.tsx
+@@ -0,0 +1,61 @@
++// Small shared bits for the repo visualizer.
++import type { ReactNode } from "react";
++import type { RepoFileInfo } from "@/lib/repos-api";
++
++export const LANG_COLORS: Record<RepoFileInfo["lang"], string> = {
++  python: "#3b82f6",
++  typescript: "#8b5cf6",
++  javascript: "#f59e0b",
++};
++
++export const LANG_NAMES: Record<string, string> = {
++  python: "Python",
++  typescript: "TypeScript",
++  javascript: "JavaScript",
++};
++
++export function LangDot({ lang }: { lang?: RepoFileInfo["lang"] }) {
++  if (!lang) return null;
++  return (
++    <span
++      aria-hidden
++      className="inline-block h-2 w-2 shrink-0 rounded-full"
++      style={{ backgroundColor: LANG_COLORS[lang] }}
++    />
++  );
++}
++
++export function Badge({ children, tone = "muted" }: { children: ReactNode; tone?: "muted" | "primary" }) {
++  return (
++    <span
++      className={
++        tone === "primary"
++          ? "inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary"
++          : "inline-flex items-center rounded-full bg-muted px-2 py-0.5 text-xs text-muted-foreground"
++      }
++    >
++      {children}
++    </span>
++  );
++}
++
++export function FileLink({
++  path,
++  onClick,
++  label,
++}: {
++  path: string;
++  onClick: (path: string) => void;
++  label?: string;
++}) {
++  return (
++    <button
++      type="button"
++      onClick={() => onClick(path)}
++      className="max-w-full truncate rounded-md border px-2 py-0.5 text-left font-mono text-xs hover:bg-accent"
++      title={path}
++    >
++      {label ?? path}
++    </button>
++  );
++}
+diff --git a/apps/web/src/lib/repo-structure.test.ts b/apps/web/src/lib/repo-structure.test.ts
+new file mode 100644
+index 0000000..7ad9abd
+--- /dev/null
++++ b/apps/web/src/lib/repo-structure.test.ts
+@@ -0,0 +1,110 @@
++import { describe, expect, it } from "vitest";
++import type { RepoAnalysis, RepoFileInfo } from "./repos-api";
++import { buildIndex, buildTree, dirOf, fileGraph, folderGraph, layoutLayers, splitSymbolId } from "./repo-structure";
++
++const file = (path: string, over: Partial<RepoFileInfo> = {}): RepoFileInfo => ({
++  path,
++  lang: "python",
++  lines: 10,
++  summary: null,
++  is_entry: false,
++  parse_error: false,
++  imports: [],
++  imported_by: [],
++  externals: [],
++  symbols: [],
++  module_calls: [],
++  ...over,
++});
++
++const analysis: RepoAnalysis = {
++  version: 1,
++  stats: { files: 4, code_files: 4, lines: 40, languages: { python: 4 }, truncated: false },
++  readme: null,
++  entry_points: ["main.py"],
++  core_files: ["app/models.py"],
++  reading_order: ["main.py"],
++  libraries: [],
++  folders: [{ path: "app", files: 2, code_files: 2, role: "Core business logic", summary: null }],
++  folder_edges: [
++    { from: "", to: "app", count: 1 },
++    { from: "tests", to: "app", count: 1 },
++  ],
++  tree: [],
++  files: [
++    file("main.py", {
++      imports: ["app/service.py"],
++      symbols: [{ id: "main.py::main", name: "main", kind: "function", line: 1, summary: null, calls: ["app/service.py::run"] }],
++    }),
++    file("app/service.py", {
++      imports: ["app/models.py"],
++      imported_by: ["main.py", "tests/test_service.py"],
++      symbols: [{ id: "app/service.py::run", name: "run", kind: "function", line: 3, summary: null, calls: [] }],
++    }),
++    file("app/models.py", { imported_by: ["app/service.py"] }),
++    file("tests/test_service.py", { imports: ["app/service.py"] }),
++  ],
++};
++
++describe("indexes", () => {
++  it("knows who calls a function", () => {
++    const index = buildIndex(analysis);
++    expect(index.calledBy.get("app/service.py::run")).toEqual(["main.py::main"]);
++    expect(splitSymbolId("a/b.py::C.m")).toEqual({ file: "a/b.py", name: "C.m" });
++    expect(dirOf("main.py")).toBe(".");
++  });
++});
++
++describe("buildTree", () => {
++  it("puts folders before files", () => {
++    const tree = buildTree(analysis.files.map((f) => f.path));
++    expect(tree.children.map((c) => c.name)).toEqual(["app", "tests", "main.py"]);
++    expect(tree.children[0].children.map((c) => c.path)).toEqual(["app/models.py", "app/service.py"]);
++  });
++});
++
++describe("graphs", () => {
++  const index = buildIndex(analysis);
++
++  it("builds a folder map with the top level as its own node", () => {
++    const g = folderGraph(analysis, index);
++    expect(g.nodes.map((n) => n.id).sort()).toEqual([".", "app", "tests"]);
++    expect(g.edges).toContainEqual({ from: ".", to: "app", count: 1 });
++    expect(g.nodes.find((n) => n.id === "app")!.sublabel).toBe("Core business logic");
++  });
++
++  it("shows a folder's files plus outside neighbours", () => {
++    const g = fileGraph(analysis, index, "app");
++    const outside = g.nodes.filter((n) => n.outside).map((n) => n.id);
++    expect(outside.sort()).toEqual(["main.py", "tests/test_service.py"]);
++    expect(g.edges).toContainEqual({ from: "app/service.py", to: "app/models.py" });
++    expect(g.edges).toContainEqual({ from: "main.py", to: "app/service.py" });
++  });
++});
++
++describe("layoutLayers", () => {
++  it("puts importers above what they import", () => {
++    const pos = layoutLayers(["a", "b", "c"], [
++      { from: "a", to: "b" },
++      { from: "b", to: "c" },
++    ]);
++    expect(pos.get("a")!.y).toBeLessThan(pos.get("b")!.y);
++    expect(pos.get("b")!.y).toBeLessThan(pos.get("c")!.y);
++  });
++
++  it("survives import cycles", () => {
++    const pos = layoutLayers(["a", "b"], [
++      { from: "a", to: "b" },
++      { from: "b", to: "a" },
++    ]);
++    expect(pos.size).toBe(2);
++    expect(pos.get("a")!.y).not.toBe(pos.get("b")!.y);
++  });
++
++  it("wraps wide layers onto more rows", () => {
++    const ids = ["root", ...Array.from({ length: 10 }, (_, i) => `n${i}`)];
++    const pos = layoutLayers(ids, ids.slice(1).map((to) => ({ from: "root", to })), { maxPerRow: 4 });
++    const rows = new Set(ids.slice(1).map((id) => pos.get(id)!.y));
++    expect(rows.size).toBe(3);
++  });
++});
+diff --git a/apps/web/src/lib/repo-structure.ts b/apps/web/src/lib/repo-structure.ts
+new file mode 100644
+index 0000000..88a2929
+--- /dev/null
++++ b/apps/web/src/lib/repo-structure.ts
+@@ -0,0 +1,229 @@
++// Pure helpers for the repo visualizer: indexes, folder tree, graph data and layout.
++// No React here, so everything is unit-tested.
++
++import type { RepoAnalysis, RepoFileInfo, RepoFolderInfo, RepoSymbol } from "./repos-api";
++
++export const ROOT = "."; // id used for files that sit at the top of the repo
++
++export const dirOf = (path: string) => {
++  const i = path.lastIndexOf("/");
++  return i === -1 ? ROOT : path.slice(0, i);
++};
++export const baseName = (path: string) => path.slice(path.lastIndexOf("/") + 1);
++export const folderLabel = (folder: string) => (folder === ROOT ? "(top level)" : folder);
++
++// ---------------------------------------------------------------- indexes
++
++export type RepoIndex = {
++  files: Map<string, RepoFileInfo>;
++  folders: Map<string, RepoFolderInfo>;
++  symbols: Map<string, { symbol: RepoSymbol; file: RepoFileInfo }>;
++  calledBy: Map<string, string[]>;
++  core: Set<string>;
++  entries: Set<string>;
++};
++
++export function buildIndex(a: RepoAnalysis): RepoIndex {
++  const files = new Map(a.files.map((f) => [f.path, f]));
++  const folders = new Map(a.folders.map((f) => [f.path, f]));
++  const symbols = new Map<string, { symbol: RepoSymbol; file: RepoFileInfo }>();
++  const calledBy = new Map<string, string[]>();
++  for (const file of a.files) {
++    for (const symbol of file.symbols) symbols.set(symbol.id, { symbol, file });
++  }
++  const addCaller = (callee: string, caller: string) => {
++    const list = calledBy.get(callee) ?? [];
++    if (!list.includes(caller)) list.push(caller);
++    calledBy.set(callee, list);
++  };
++  for (const file of a.files) {
++    for (const s of file.symbols) for (const c of s.calls) addCaller(c, s.id);
++    for (const c of file.module_calls) addCaller(c, `${file.path}::(module)`);
++  }
++  return { files, folders, symbols, calledBy, core: new Set(a.core_files), entries: new Set(a.entry_points) };
++}
++
++/** "src/app.py::App.run" -> { file: "src/app.py", name: "App.run" } */
++export function splitSymbolId(id: string) {
++  const i = id.lastIndexOf("::");
++  return { file: id.slice(0, i), name: id.slice(i + 2) };
++}
++
++// ---------------------------------------------------------------- folder tree
++
++export type TreeNode = {
++  name: string;
++  path: string;
++  kind: "folder" | "file";
++  children: TreeNode[];
++};
++
++/** Tree of code files and the folders that contain them, folders first, alphabetical. */
++export function buildTree(codePaths: string[]): TreeNode {
++  const root: TreeNode = { name: "", path: ROOT, kind: "folder", children: [] };
++  for (const path of codePaths) {
++    const parts = path.split("/");
++    let node = root;
++    parts.forEach((part, i) => {
++      const isFile = i === parts.length - 1;
++      const childPath = parts.slice(0, i + 1).join("/");
++      let child = node.children.find((c) => c.name === part && c.kind === (isFile ? "file" : "folder"));
++      if (!child) {
++        child = { name: part, path: childPath, kind: isFile ? "file" : "folder", children: [] };
++        node.children.push(child);
++      }
++      node = child;
++    });
++  }
++  const sort = (n: TreeNode) => {
++    n.children.sort((a, b) => (a.kind === b.kind ? a.name.localeCompare(b.name) : a.kind === "folder" ? -1 : 1));
++    n.children.forEach(sort);
++  };
++  sort(root);
++  return root;
++}
++
++// ---------------------------------------------------------------- graph data
++
++export type GraphNodeData = {
++  id: string;
++  label: string;
++  sublabel: string;
++  kind: "folder" | "file";
++  lang?: RepoFileInfo["lang"];
++  isEntry: boolean;
++  isCore: boolean;
++  outside: boolean; // a neighbour from another folder, shown for context
++};
++export type GraphData = { nodes: GraphNodeData[]; edges: { from: string; to: string; count?: number }[] };
++
++/** One node per folder that directly holds code files; edges are imports between folders. */
++export function folderGraph(a: RepoAnalysis, index: RepoIndex): GraphData {
++  const byFolder = new Map<string, RepoFileInfo[]>();
++  for (const f of a.files) byFolder.set(dirOf(f.path), [...(byFolder.get(dirOf(f.path)) ?? []), f]);
++  const nodes: GraphNodeData[] = [...byFolder.entries()].map(([folder, files]) => {
++    const meta = index.folders.get(folder);
++    return {
++      id: folder,
++      label: folder === ROOT ? "(top level)" : folder,
++      sublabel: meta?.role ?? `${files.length} code file${files.length === 1 ? "" : "s"}`,
++      kind: "folder",
++      isEntry: files.some((f) => index.entries.has(f.path)),
++      isCore: files.some((f) => index.core.has(f.path)),
++      outside: false,
++    };
++  });
++  const toId = (d: string) => (d === "" ? ROOT : d);
++  const edges = a.folder_edges
++    .map((e) => ({ from: toId(e.from), to: toId(e.to), count: e.count }))
++    .filter((e) => byFolder.has(e.from) && byFolder.has(e.to));
++  return { nodes, edges };
++}
++
++/** Files in one folder (or the whole repo when folder is null) plus their outside neighbours. */
++export function fileGraph(a: RepoAnalysis, index: RepoIndex, folder: string | null, maxOutside = 24): GraphData {
++  const inside = a.files.filter((f) => folder === null || dirOf(f.path) === folder);
++  const insideSet = new Set(inside.map((f) => f.path));
++  const outside: string[] = [];
++  if (folder !== null) {
++    for (const f of inside) {
++      for (const p of [...f.imports, ...f.imported_by]) {
++        if (!insideSet.has(p) && !outside.includes(p) && outside.length < maxOutside) outside.push(p);
++      }
++    }
++  }
++  const make = (path: string, isOutside: boolean): GraphNodeData => {
++    const f = index.files.get(path)!;
++    return {
++      id: path,
++      label: isOutside ? path : baseName(path),
++      sublabel: f.summary ?? `${f.lines} lines, ${f.symbols.length} definitions`,
++      kind: "file",
++      lang: f.lang,
++      isEntry: index.entries.has(path),
++      isCore: index.core.has(path),
++      outside: isOutside,
++    };
++  };
++  const nodes = [...inside.map((f) => make(f.path, false)), ...outside.map((p) => make(p, true))];
++  const ids = new Set(nodes.map((n) => n.id));
++  const edges: GraphData["edges"] = [];
++  for (const n of nodes) {
++    for (const target of index.files.get(n.id)!.imports) {
++      if (ids.has(target) && (!n.outside || insideSet.has(target))) edges.push({ from: n.id, to: target });
++    }
++  }
++  return { nodes, edges };
++}
++
++// ---------------------------------------------------------------- layout
++
++/**
++ * Layered layout: importers above the things they import. Cycles are broken by
++ * ignoring back edges; wide layers wrap onto extra rows.
++ */
++export function layoutLayers(
++  ids: string[],
++  edges: { from: string; to: string }[],
++  opts: { colWidth?: number; rowHeight?: number; maxPerRow?: number } = {},
++): Map<string, { x: number; y: number }> {
++  const colWidth = opts.colWidth ?? 250;
++  const rowHeight = opts.rowHeight ?? 120;
++  const maxPerRow = opts.maxPerRow ?? 6;
++  const idSet = new Set(ids);
++  const out = new Map<string, string[]>(ids.map((id) => [id, []]));
++  const indegree = new Map<string, number>(ids.map((id) => [id, 0]));
++  for (const { from, to } of edges) {
++    if (from === to || !idSet.has(from) || !idSet.has(to) || out.get(from)!.includes(to)) continue;
++    out.get(from)!.push(to);
++    indegree.set(to, indegree.get(to)! + 1);
++  }
++
++  // Depth-first search; edges back to a node still on the stack form a cycle and are dropped.
++  const state = new Map<string, 1 | 2>();
++  const dag = new Map<string, string[]>(ids.map((id) => [id, []]));
++  const postorder: string[] = [];
++  const visit = (n: string) => {
++    state.set(n, 1);
++    for (const m of out.get(n)!) {
++      const s = state.get(m);
++      if (s === 1) continue;
++      dag.get(n)!.push(m);
++      if (s === undefined) visit(m);
++    }
++    state.set(n, 2);
++    postorder.push(n);
++  };
++  const roots = [...ids].sort((a, b) => indegree.get(a)! - indegree.get(b)! || a.localeCompare(b));
++  for (const id of roots) if (!state.has(id)) visit(id);
++
++  const level = new Map<string, number>(ids.map((id) => [id, 0]));
++  for (const n of [...postorder].reverse()) {
++    for (const m of dag.get(n)!) level.set(m, Math.max(level.get(m)!, level.get(n)! + 1));
++  }
++
++  const layers: string[][] = [];
++  for (const id of ids) (layers[level.get(id)!] ??= []).push(id);
++
++  const parents = new Map<string, string[]>(ids.map((id) => [id, []]));
++  for (const [n, kids] of dag) for (const k of kids) parents.get(k)!.push(n);
++
++  const pos = new Map<string, { x: number; y: number }>();
++  let y = 0;
++  for (const layer of layers) {
++    if (!layer) continue;
++    const order = layer
++      .map((id) => {
++        const xs = parents.get(id)!.map((p) => pos.get(p)?.x).filter((x): x is number => x !== undefined);
++        return { id, key: xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : Number.POSITIVE_INFINITY };
++      })
++      .sort((a, b) => a.key - b.key || a.id.localeCompare(b.id));
++    for (let i = 0; i < order.length; i += maxPerRow) {
++      const row = order.slice(i, i + maxPerRow);
++      row.forEach((item, j) => pos.set(item.id, { x: (j - (row.length - 1) / 2) * colWidth, y }));
++      y += rowHeight;
++    }
++    y += rowHeight * 0.25;
++  }
++  return pos;
++}
+diff --git a/apps/web/src/lib/repos-api.ts b/apps/web/src/lib/repos-api.ts
+new file mode 100644
+index 0000000..65d8fa6
+--- /dev/null
++++ b/apps/web/src/lib/repos-api.ts
+@@ -0,0 +1,100 @@
++// Repo visualizer API calls and types. Re-export from api.ts if you want one entry point:
++//   export * from "./repos-api";
++
++export type RepoSyncStatus = "pending" | "syncing" | "ok" | "failed";
++
++export type RepoSummary = {
++  id: string;
++  owner: string;
++  name: string;
++  full_name: string;
++  description: string | null;
++  default_branch: string | null;
++  commit_sha: string | null;
++  stars: number;
++  sync_status: RepoSyncStatus;
++  sync_error: string | null;
++  last_synced_at: string | null;
++};
++
++export type RepoSymbol = {
++  id: string; // "path::name"
++  name: string; // "func", "Class" or "Class.method"
++  kind: "function" | "class" | "method" | "component";
++  line: number;
++  summary: string | null;
++  calls: string[]; // symbol ids
++};
++
++export type RepoFileInfo = {
++  path: string;
++  lang: "python" | "javascript" | "typescript";
++  lines: number;
++  summary: string | null;
++  is_entry: boolean;
++  parse_error: boolean;
++  imports: string[];
++  imported_by: string[];
++  externals: string[];
++  symbols: RepoSymbol[];
++  module_calls: string[];
++};
++
++export type RepoFolderInfo = {
++  path: string;
++  files: number;
++  code_files: number;
++  role: string | null;
++  summary: string | null;
++};
++
++export type RepoAnalysis = {
++  version: number;
++  stats: {
++    files: number;
++    code_files: number;
++    lines: number;
++    languages: Record<string, number>;
++    truncated: boolean;
++  };
++  readme: string | null;
++  entry_points: string[];
++  core_files: string[];
++  reading_order: string[];
++  libraries: { name: string; files: number }[];
++  folders: RepoFolderInfo[];
++  folder_edges: { from: string; to: string; count: number }[];
++  tree: string[];
++  files: RepoFileInfo[];
++};
++
++export type RepoStructure = { repo: RepoSummary; analysis: RepoAnalysis };
++export type RepoFileContent = { path: string; content: string; truncated: boolean };
++
++async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
++  const res = await fetch(path, {
++    credentials: "include",
++    headers: { "Content-Type": "application/json" },
++    ...init,
++  });
++  const body = await res.json().catch(() => null);
++  if (!res.ok) {
++    if (res.status === 401) throw new Error("Log in to use the repo visualizer.");
++    if (res.status === 502 || res.status === 503) throw new Error("The server is waking up. Try again in a moment.");
++    const detail = body?.error?.message ?? (typeof body?.detail === "string" ? body.detail : null);
++    throw new Error(detail ?? `Request failed (${res.status})`);
++  }
++  return body as T;
++}
++
++const repoPath = (id: string) => `/api/v1/repos/${encodeURIComponent(id)}`;
++
++export const analyzeRepo = (url: string) =>
++  getJson<RepoSummary>("/api/v1/repos/analyze", { method: "POST", body: JSON.stringify({ url }) });
++
++export const getRepo = (id: string) => getJson<RepoSummary>(repoPath(id));
++
++export const getRepoStructure = (id: string) => getJson<RepoStructure>(`${repoPath(id)}/structure`);
++
++export const getRepoFile = (id: string, path: string) =>
++  getJson<RepoFileContent>(`${repoPath(id)}/file?path=${encodeURIComponent(path)}`);
